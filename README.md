@@ -1,3 +1,5 @@
+<img width="1918" height="1018" alt="image" src="https://github.com/user-attachments/assets/9af32428-73a1-4d47-a601-0c6bcda32ffe" />
+
 # 🎮 Cheat File Creator
 
 Cheat File Creator is a simple GUI tool for creating cheat files and exporting them to the correct folder structure for popular emulators and console cheat systems.
