@@ -1,5 +1,3 @@
-# cheat-file-editor
-Cheat file creator + quick export paths for emulators
 # 🎮 Cheat File Creator
 
 Cheat File Creator is a simple GUI tool for creating cheat files and exporting them to the correct folder structure for popular emulators and console cheat systems.

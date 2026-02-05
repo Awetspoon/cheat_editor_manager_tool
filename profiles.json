@@ -1,0 +1,170 @@
+{
+  "profiles": [
+    {
+      "id": "pizza_boy",
+      "name": "Pizza Boy (GBA/GBC)",
+      "default_extension": ".cht.xml",
+      "extensions": [
+        { "label": "Pizza Boy CHT XML (*.cht.xml)", "pattern": "*.cht.xml", "extension": ".cht.xml" },
+        { "label": "Pizza Boy XML (*.xml)", "pattern": "*.xml", "extension": ".xml" },
+        { "label": "Pizza Boy CHT (*.cht)", "pattern": "*.cht", "extension": ".cht" }
+      ],
+      "default_template_id": "pb_blank",
+      "templates": [
+        {
+          "id": "pb_blank",
+          "name": "Blank (recommended)",
+          "content": "<!-- Pizza Boy cheat format varies by version/source. -->\n<!-- Tip: Open an existing working Pizza Boy cheat file and use it as a base. -->\n"
+        },
+        {
+          "id": "pb_notes",
+          "name": "Notes + placeholders",
+          "content": "<!-- Game: (name here) -->\n<!-- If your emulator expects XML structure, keep it EXACT. -->\n<!-- Paste valid Pizza Boy XML/CHT content below. -->\n"
+        }
+      ]
+    },
+    {
+      "id": "retroarch",
+      "name": "RetroArch (Cheats .cht)",
+      "default_extension": ".cht",
+      "extensions": [
+        { "label": "RetroArch CHT (*.cht)", "pattern": "*.cht", "extension": ".cht" }
+      ],
+      "default_template_id": "ra_blank",
+      "templates": [
+        {
+          "id": "ra_blank",
+          "name": "Blank (recommended)",
+          "content": "cheats = 0\n\n# Use: Add Cheat (Helper) to generate cheat0_*, cheat1_* etc.\n"
+        },
+        {
+          "id": "ra_example",
+          "name": "Example (made-up cheats)",
+          "content": "cheats = 2\n\n# Example only (fake codes)\ncheat0_desc = \"Infinite HP (EXAMPLE)\"\ncheat0_code = \"12345678 00000063+12345679 00000063\"\ncheat0_enable = false\n\ncheat1_desc = \"Max Money (EXAMPLE)\"\ncheat1_code = \"11111111 000F423F\"\ncheat1_enable = false\n"
+        }
+      ]
+    },
+    {
+      "id": "switch_atmosphere",
+      "name": "Nintendo Switch (Atmosphère Cheats)",
+      "default_extension": ".txt",
+      "extensions": [
+        { "label": "Atmosphère TXT (*.txt)", "pattern": "*.txt", "extension": ".txt" }
+      ],
+      "default_template_id": "sw_blank",
+      "templates": [
+        {
+          "id": "sw_blank",
+          "name": "Blank (recommended)",
+          "content": "# Atmosphère cheats (.txt)\n# File is saved as: <BID>.txt\n# Folder: atmosphere/contents/<TID>/cheats/\n\n# Paste Switch-format cheats below\n"
+        },
+        {
+          "id": "sw_ids",
+          "name": "IDs Header Helper",
+          "content": "# Put your game identifiers here so you don’t forget:\n# TID: 0123456789ABCDEF\n# BID: 0123456789ABCDEF\n\n# Cheats below\n"
+        }
+      ]
+    },
+    {
+      "id": "retroarch_citra",
+      "name": "RetroArch - Citra Core (game_id.txt)",
+      "default_extension": ".txt",
+      "extensions": [
+        { "label": "Citra Cheats TXT (*.txt)", "pattern": "*.txt", "extension": ".txt" }
+      ],
+      "default_template_id": "citra_blank",
+      "templates": [
+        {
+          "id": "citra_blank",
+          "name": "Blank (recommended)",
+          "content": "# Citra core cheats\n# Saved to: RetroArch/saves/Citra/cheats/<game_id>.txt\n\n# Paste Citra-format cheats below\n"
+        }
+      ]
+    },
+    {
+      "id": "ppsspp",
+      "name": "PPSSPP (PSP Cheats .ini)",
+      "default_extension": ".ini",
+      "extensions": [
+        { "label": "PPSSPP INI (*.ini)", "pattern": "*.ini", "extension": ".ini" }
+      ],
+      "default_template_id": "ppsspp_blank",
+      "templates": [
+        {
+          "id": "ppsspp_blank",
+          "name": "Blank (recommended)",
+          "content": "; PPSSPP cheats (.ini)\n; Typical location: PSP/Cheats/<GAME_ID>.ini\n\n"
+        },
+        {
+          "id": "ppsspp_example",
+          "name": "Example (made-up, safe)",
+          "content": "; Example only (fake codes)\n_C0 Infinite HP (EXAMPLE)\n_L 0x20000000 0x00000063\n\n_C0 Max Money (EXAMPLE)\n_L 0x20000010 0x0098967F\n\n"
+        }
+      ]
+    },
+    {
+      "id": "dolphin",
+      "name": "Dolphin (GameCube/Wii GameSettings .ini)",
+      "default_extension": ".ini",
+      "extensions": [
+        { "label": "Dolphin INI (*.ini)", "pattern": "*.ini", "extension": ".ini" }
+      ],
+      "default_template_id": "dolphin_blank",
+      "templates": [
+        {
+          "id": "dolphin_blank",
+          "name": "Blank (recommended)",
+          "content": "; Dolphin GameSettings .ini\n; Typical location: Dolphin Emulator/GameSettings/<GAME_ID>.ini\n\n"
+        },
+        {
+          "id": "dolphin_example",
+          "name": "Example layout (placeholders)",
+          "content": "; Example layout ONLY (not real codes)\n[ActionReplay]\n$Example Cheat Name\n01234567 89ABCDEF\n\n[Gecko]\n$Example Gecko Name\n01234567 89ABCDEF\n\n"
+        }
+      ]
+    },
+    {
+      "id": "pcsx2",
+      "name": "PCSX2 (PS2 Cheats .pnach)",
+      "default_extension": ".pnach",
+      "extensions": [
+        { "label": "PCSX2 PNACH (*.pnach)", "pattern": "*.pnach", "extension": ".pnach" }
+      ],
+      "default_template_id": "pcsx2_blank",
+      "templates": [
+        {
+          "id": "pcsx2_blank",
+          "name": "Blank (recommended)",
+          "content": "// PCSX2 pnach\n// Typical location: PCSX2/cheats/<CRC>.pnach\n\n"
+        },
+        {
+          "id": "pcsx2_example",
+          "name": "Example (made-up, safe)",
+          "content": "// Example only (fake codes)\npatch=1,EE,00123456,word,00000063 // Infinite HP (EXAMPLE)\npatch=1,EE,00123460,word,0098967F // Max Money (EXAMPLE)\n\n"
+        }
+      ]
+    },
+    {
+      "id": "duckstation",
+      "name": "DuckStation (PS1 Cheats .cht/.txt)",
+      "default_extension": ".cht",
+      "extensions": [
+        { "label": "Cheat File (*.cht)", "pattern": "*.cht", "extension": ".cht" },
+        { "label": "Text File (*.txt)", "pattern": "*.txt", "extension": ".txt" }
+      ],
+      "default_template_id": "ps1_blank",
+      "templates": [
+        {
+          "id": "ps1_blank",
+          "name": "Blank (recommended)",
+          "content": "# PS1 cheat file\n# DuckStation supports text-based cheat lists (format depends on source/settings).\n\n"
+        },
+        {
+          "id": "ps1_example",
+          "name": "Example (placeholder layout)",
+          "content": "# Example only (fake)\n# [Cheat Name]\n# 01234567 89ABCDEF\n\n"
+        }
+      ]
+    }
+  ]
+}
