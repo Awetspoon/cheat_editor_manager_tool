@@ -1,153 +1,232 @@
-<img width="1918" height="1018" alt="image" src="https://github.com/user-attachments/assets/9af32428-73a1-4d47-a601-0c6bcda32ffe" />
+# 🎮 Cheat Editor Manager Tool
 
-# 🎮 Cheat File Creator
+> Edit. Organise. Export.\
+> Cheat files made simple for emulators and modded consoles.
 
-Cheat File Creator is a simple GUI tool for creating cheat files and exporting them to the correct folder structure for popular emulators and console cheat systems.
+------------------------------------------------------------------------
 
-✅ Works on Windows  
-✅ Uses profiles.json to define emulators, extensions, and templates  
-✅ Includes Quick Export (auto folders) and Convert & Save (manual save)
+## 🚀 What Is This?
 
----
+**Cheat Editor Manager Tool** is a desktop app that lets you:
 
-## ✨ What this app does
+✔ Edit cheat files safely\
+✔ Automatically build correct folder structures\
+✔ Detect Switch TitleID (TID) & BuildID (BID)\
+✔ Export to the correct emulator format\
+✔ Manage custom emulator profiles\
+✔ Avoid breaking file paths
 
-- Create and edit cheat files
-- Load templates designed for each emulator
-- Automatically build correct cheat folders
-- Save files in supported formats per emulator
+You don't need to know where cheats go.\
+The program handles it.
 
----
+------------------------------------------------------------------------
 
-## 🧩 Emulator / Console Profiles
+# 🧠 Who Is This For?
 
-Choose an emulator from the dropdown and the app will automatically:
+-   🎮 Emulator users\
+-   🔓 Switch CFW users\
+-   🕹 RetroArch users\
+-   🧩 Modded console users\
+-   👶 Beginners who don't understand folder structures\
+-   🛠 Advanced users who want control
 
-- Show the correct Quick Export fields
-- Offer valid file extensions
-- Load available templates for that emulator
+------------------------------------------------------------------------
 
-All emulator definitions live in **profiles.json**.
+# 🖥 Supported Platforms
 
----
+## 🧰 PC Emulators
 
-## 📝 Templates
+-   Yuzu\
+-   Ryujinx\
+-   RetroArch\
+-   Dolphin\
+-   PCSX2\
+-   PPSSPP\
+-   DuckStation\
+-   RPCS3\
+-   Cemu\
+-   Xenia
 
-Templates help you start with the correct cheat format.
+## 🔓 Switch Custom Firmware
 
-### How to use templates
-1. Select an emulator
-2. Select a template
-3. Click **Open Template**
-4. Choose to Replace or Append
+-   Atmosphère (CFW)
 
-### Default templates
-- You can set a template as the default for each emulator
-- Defaults are saved automatically
+## 🧩 Modded Consoles
 
-Buttons:
-- Reset Default Template (current emulator)
-- Reset ALL Defaults (every emulator)
+-   Nintendo 3DS (Luma)\
+-   PSP (CFW)\
+-   PS Vita (taiHEN)\
+-   Wii (Homebrew)\
+-   Wii U (CFW)
 
-Defaults are stored in **user_prefs.json**.
+You can also create your own custom profile.
 
----
+------------------------------------------------------------------------
 
-## 🧰 Add Cheat (Helper)
+# 🧭 How To Use (Beginner Guide)
 
-Click **Add Cheat (Helper)** to safely insert cheat blocks.
+## 1️⃣ Select Your Emulator / Console
 
-- Automatically formats cheats for supported emulators
-- Prevents breaking strict cheat formats
-- Generic helper is used for unsupported formats
+Choose your platform at the top of the app.
 
----
+This controls:
 
-## 🚀 Quick Export (Auto Folder Building)
+-   Folder structure\
+-   File extension\
+-   Export behaviour\
+-   Helper instructions
 
-Quick Export builds the correct folder path under your Export Root.
+------------------------------------------------------------------------
 
-### Supported Quick Export targets
+## 2️⃣ Load A Cheat File (Optional)
 
-- RetroArch  
-  ExportRoot/RetroArch/cheats/Core/ROM.cht
+Click:
 
-- PPSSPP (PSP)  
-  ExportRoot/PPSSPP/PSP/Cheats/GAME_ID.ini
+Load File...
 
-- Dolphin (GameCube / Wii)  
-  ExportRoot/Dolphin/GameSettings/GAME_ID.ini
+If it's a Switch cheat file:
 
-- PCSX2  
-  ExportRoot/PCSX2/cheats/CRC.pnach
+✔ TitleID auto-detected\
+✔ BuildID auto-detected\
+✔ Editor remains cheat-text only
 
-- Nintendo Switch (Atmosphère)  
-  ExportRoot/Switch/atmosphere/contents/TID/cheats/BID.txt
+------------------------------------------------------------------------
 
-- RetroArch – Citra core  
-  ExportRoot/RetroArch/saves/Citra/cheats/game_id.txt
+## 3️⃣ Edit Your Cheats
 
----
+Use the Cheat Editor box to:
 
-## 💾 Convert & Save
+-   Add cheats\
+-   Modify codes\
+-   Remove cheats\
+-   Undo / Redo\
+-   Add headings\
+-   Wrap text\
+-   Clear safely
 
-Use Convert & Save when you want full control.
+------------------------------------------------------------------------
 
-It lets you:
-- Choose where to save
-- Choose from valid extensions for the selected emulator
+## 4️⃣ Quick Export (Recommended)
 
----
+Click:
 
-## 📂 Export Root
+Quick Export
 
-Export Root is the base folder used by Quick Export.
+The program automatically builds the correct folder structure.
 
-Buttons:
-- Open Folder – opens Export Root
-- Change… – select a new folder
-- Reset Default – restore the recommended default
+Examples:
 
-Export Root is saved in **user_prefs.json**.
+Switch (Atmosphère)
+atmosphere/contents/`<TID>`{=html}/cheats/`<BID>`{=html}.txt
 
----
+Yuzu load/`<TID>`{=html}/`<Cheat Name>`{=html}/cheats/`<BID>`{=html}.txt
 
-## 🧱 Project Files
+RetroArch cheats/`<Core Name>`{=html}/`<Game>`{=html}.cht
 
-Typical folder layout:
+Dolphin GameSettings/`<GameID>`{=html}.ini
 
-- cheat_creator.exe (Windows app)
-- profiles.json (emulator definitions and templates)
-- user_prefs.json (auto-generated user settings)
-- README.md
+No manual folder creation required.
 
----
+------------------------------------------------------------------------
 
-## ➕ Adding New Emulators / Consoles
+## 5️⃣ Convert & Save (Advanced Option)
 
-Edit **profiles.json** and add a new entry inside the profiles list.
+Use this if you want to:
 
-Each profile includes:
-- id (unique identifier)
-- name (shown in the app)
-- default_extension
-- extensions (used by Convert & Save)
-- templates (optional but recommended)
+-   Choose your own folder\
+-   Pick a different extension\
+-   Rename the file
 
-After editing:
-- Restart the app OR
-- Click Reload profiles
+You will select the extension first, then save location.
 
----
+------------------------------------------------------------------------
 
-## 🪟 Build Windows EXE (Developers)
+# 🧩 Understanding The Helper Section
 
-1. Install Python  
-2. Install PyInstaller  
-3. Build the app
+The Helper box changes based on the selected emulator.
 
-The EXE will appear in the dist folder.
+Switch Profiles: - Shows TitleID field - Shows BuildID field
 
----
+RetroArch: - Shows Core selector
 
-Enjoy creating cheats 🎮
+Other Emulators: - Shows relevant export instructions
+
+This section does NOT modify cheat text.
+
+------------------------------------------------------------------------
+
+# 🛠 Custom Profiles
+
+You can create your own emulator or custom firmware profile.
+
+You define:
+
+-   Folder structure\
+-   File extension\
+-   Helper instructions
+
+Custom profiles appear in the main dropdown automatically.
+
+Built-in profiles remain untouched.
+
+------------------------------------------------------------------------
+
+# 🎨 Appearance
+
+You can:
+
+-   Switch Dark / Light mode\
+-   Enable full Custom colour mode\
+-   Reset to default colours
+
+------------------------------------------------------------------------
+
+# ⚙ Advanced
+
+-   Override export paths (optional)\
+-   Remember window size
+
+Defaults are safe.
+
+------------------------------------------------------------------------
+
+# 🔒 Design Philosophy
+
+The editor contains cheat text only.
+
+IDs, folder paths, and structure are handled by the tool.
+
+This prevents:
+
+-   Broken exports\
+-   Wrong folder placement\
+-   Incorrect file naming
+
+------------------------------------------------------------------------
+
+# 📦 Building The Program
+
+Using PyInstaller:
+
+py -m PyInstaller --clean --noconfirm --onefile --windowed --name
+"cheat_editor_manager_tool" cheat_editor_manager_tool.py
+
+------------------------------------------------------------------------
+
+# 🎯 Goal Of The Tool
+
+You focus on editing cheats.
+
+The program handles:
+
+-   Structure\
+-   Format\
+-   Extensions\
+-   Export safety
+
+------------------------------------------------------------------------
+
+# 🧑‍💻 Credits
+
+Concept & Design: Marcus\
+Development Support: ChatGPT
