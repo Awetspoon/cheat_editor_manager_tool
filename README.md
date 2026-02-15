@@ -1,20 +1,26 @@
 # 🎮 Cheat Editor Manager Tool
 
+![Version](https://img.shields.io/badge/version-1.3.0-blue)
+![Platform](https://img.shields.io/badge/platform-Windows-lightgrey)
+![Python](https://img.shields.io/badge/python-3.9%2B-blue)
+
 > Edit. Organise. Export.\
 > Cheat files made simple for emulators and modded consoles.
 
 ------------------------------------------------------------------------
 
-## 🚀 What Is This?
+# 🚀 What Is This?
 
-**Cheat Editor Manager Tool** is a desktop app that lets you:
+**Cheat Editor Manager Tool** is a desktop application that allows you
+to:
 
-✔ Edit cheat files safely\
-✔ Automatically build correct folder structures\
-✔ Detect Switch TitleID (TID) & BuildID (BID)\
-✔ Export to the correct emulator format\
-✔ Manage custom emulator profiles\
-✔ Avoid breaking file paths
+-   ✔ Edit cheat files safely
+-   ✔ Automatically build correct folder structures
+-   ✔ Detect Switch TitleID (TID) & BuildID (BID)
+-   ✔ Export to the correct emulator format
+-   ✔ Manage custom emulator profiles
+-   ✔ Preview export paths before writing files
+-   ✔ Avoid broken folder structures
 
 You don't need to know where cheats go.\
 The program handles it.
@@ -28,7 +34,7 @@ The program handles it.
 -   🕹 RetroArch users\
 -   🧩 Modded console users\
 -   👶 Beginners who don't understand folder structures\
--   🛠 Advanced users who want control
+-   🛠 Advanced users who want full control
 
 ------------------------------------------------------------------------
 
@@ -38,7 +44,7 @@ The program handles it.
 
 -   Yuzu\
 -   Ryujinx\
--   RetroArch\
+-   RetroArch (multi-core support)\
 -   Dolphin\
 -   PCSX2\
 -   PPSSPP\
@@ -53,17 +59,17 @@ The program handles it.
 
 ## 🧩 Modded Consoles
 
--   Nintendo 3DS (Luma)\
--   PSP (CFW)\
--   PS Vita (taiHEN)\
--   Wii (Homebrew)\
+-   Nintendo 3DS (Luma)
+-   PSP (CFW)
+-   PS Vita (taiHEN)
+-   Wii (Homebrew)
 -   Wii U (CFW)
 
 You can also create your own custom profile.
 
 ------------------------------------------------------------------------
 
-# 🧭 How To Use (Beginner Guide)
+# 🧭 How To Use
 
 ## 1️⃣ Select Your Emulator / Console
 
@@ -80,111 +86,116 @@ This controls:
 
 ## 2️⃣ Load A Cheat File (Optional)
 
-Click:
-
-Load File...
+Click **Load File...**
 
 If it's a Switch cheat file:
 
-✔ TitleID auto-detected\
-✔ BuildID auto-detected\
-✔ Editor remains cheat-text only
+-   ✔ TitleID auto-detected\
+-   ✔ BuildID auto-detected\
+-   ✔ Editor remains cheat-text only
+
+RetroArch cheat files will auto-detect the core folder when possible.
 
 ------------------------------------------------------------------------
 
 ## 3️⃣ Edit Your Cheats
 
-Use the Cheat Editor box to:
+Use the Cheat Editor to:
 
 -   Add cheats\
 -   Modify codes\
 -   Remove cheats\
 -   Undo / Redo\
 -   Add headings\
--   Wrap text\
 -   Clear safely
+
+The editor contains cheat text only --- never folder paths.
 
 ------------------------------------------------------------------------
 
 ## 4️⃣ Quick Export (Recommended)
 
-Click:
-
-Quick Export
+Click **Quick Export**
 
 The program automatically builds the correct folder structure.
 
-Examples:
+### Example Structures
 
-Switch (Atmosphère)
-atmosphere/contents/`<TID>`{=html}/cheats/`<BID>`{=html}.txt
+**Atmosphère**
 
-Yuzu load/`<TID>`{=html}/`<Cheat Name>`{=html}/cheats/`<BID>`{=html}.txt
+    atmosphere/contents/<TID>/cheats/<BID>.txt
 
-RetroArch cheats/`<Core Name>`{=html}/`<Game>`{=html}.cht
+**Yuzu**
 
-Dolphin GameSettings/`<GameID>`{=html}.ini
+    load/<TID>/<Cheat Name>/cheats/<BID>.txt
+
+**RetroArch**
+
+    cheats/<Core Name>/<Game>.cht
+
+**Dolphin**
+
+    GameSettings/<GameID>.ini
 
 No manual folder creation required.
 
 ------------------------------------------------------------------------
 
-## 5️⃣ Convert & Save (Advanced Option)
+## 5️⃣ Convert & Save (Advanced)
 
-Use this if you want to:
+Use this when you want to:
 
 -   Choose your own folder\
--   Pick a different extension\
+-   Pick a custom extension\
 -   Rename the file
 
-You will select the extension first, then save location.
-
 ------------------------------------------------------------------------
 
-# 🧩 Understanding The Helper Section
+# 🧩 Smart Features (v1.3.0)
 
-The Helper box changes based on the selected emulator.
-
-Switch Profiles: - Shows TitleID field - Shows BuildID field
-
-RetroArch: - Shows Core selector
-
-Other Emulators: - Shows relevant export instructions
-
-This section does NOT modify cheat text.
-
-------------------------------------------------------------------------
-
-# 🛠 Custom Profiles
-
-You can create your own emulator or custom firmware profile.
-
-You define:
-
--   Folder structure\
--   File extension\
--   Helper instructions
-
-Custom profiles appear in the main dropdown automatically.
-
-Built-in profiles remain untouched.
+-   🔄 Unified export builder (single source of truth)
+-   👁 Live export path preview
+-   🧠 RetroArch smart core detection
+-   🎨 Improved Appearance system
+-   🌙 Custom mode safety guard for quick toggle
+-   🗂 Toolbar button colour control
+-   📋 Clearer Dark mode readability
+-   🔧 Reset to Dark/Light preset prompt
 
 ------------------------------------------------------------------------
 
 # 🎨 Appearance
 
-You can:
+-   Dark / Light default modes\
+-   Full Custom colour mode\
+-   Reset to preset themes\
+-   Toolbar button styling\
+-   Automatic save on close
 
--   Switch Dark / Light mode\
--   Enable full Custom colour mode\
--   Reset to default colours
+Custom mode disables quick theme toggle for clarity.
+
+------------------------------------------------------------------------
+
+# 🛠 Custom Profiles
+
+Create your own emulator or CFW profile.
+
+Define:
+
+-   Folder structure\
+-   File extension\
+-   Helper instructions
+
+Built-in profiles remain protected.
 
 ------------------------------------------------------------------------
 
 # ⚙ Advanced
 
--   Override export paths (optional)\
+-   Override export paths (optional)
 -   Remember window size
+-   Path validation
+-   ID parsing safeguards
 
 Defaults are safe.
 
@@ -208,8 +219,9 @@ This prevents:
 
 Using PyInstaller:
 
-py -m PyInstaller --clean --noconfirm --onefile --windowed --name
-"cheat_editor_manager_tool" cheat_editor_manager_tool.py
+``` bash
+py -m PyInstaller --clean --noconfirm --onefile --windowed --name "cheat_editor_manager_tool" cheat_editor_manager_tool.py
+```
 
 ------------------------------------------------------------------------
 
@@ -230,3 +242,9 @@ The program handles:
 
 Concept & Design: Marcus\
 Development Support: ChatGPT
+
+------------------------------------------------------------------------
+
+# 📜 License
+
+Add your chosen license here (MIT recommended).
