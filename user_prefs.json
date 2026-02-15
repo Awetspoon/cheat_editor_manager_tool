@@ -1,8 +1,0 @@
-{
-  "export_root": "C:\\Users\\Marcus\\Documents\\CheatCreator",
-  "template_defaults": {
-    "retroarch_citra": "citra_blank",
-    "switch_atmosphere": "sw_blank",
-    "dolphin": "dolphin_blank"
-  }
-}
