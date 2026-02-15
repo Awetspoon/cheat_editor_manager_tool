@@ -892,19 +892,9 @@ class App:
         return base
 
     def toggle_mode(self):
-        # Block quick toggle while in Custom mode
-        if self.prefs.get("custom_theme_enabled"):
-            self.status.set(
-                "Quick theme toggle disabled while Custom mode is active. "
-                "Go to Settings → Appearance to switch to Dark or Light."
-            )
-            return
-
-        # Normal Dark / Light toggle
         self.prefs["mode"] = "dark" if self.prefs.get("mode") == "light" else "light"
         save_prefs(self.prefs)
         self.apply_theme()
-        self.status.set(f"Theme set to: {self.prefs['mode'].title()}")
 
     def apply_theme(self):
         c = self.effective_colors()
@@ -973,16 +963,7 @@ class App:
         style.configure("Danger.TButton", background=btn.get("danger", DEFAULT_BUTTON_COLORS["danger"]), foreground="#ffffff")
         style.map("Danger.TButton", background=[("active", btn.get("danger", DEFAULT_BUTTON_COLORS["danger"]))])
         style.configure("TNotebook", background=c["bg"])
-        # Notebook tabs (Settings tabs etc.) need explicit state maps for dark mode readability.
-        tab_fg = c["text"]
-        if self.prefs.get("mode") == "dark":
-            tab_fg = "#ffffff"
-        style.configure("TNotebook.Tab", background=c["panel"], foreground=tab_fg)
-        style.map(
-            "TNotebook.Tab",
-            foreground=[("selected", tab_fg), ("active", tab_fg)],
-            background=[("selected", c["panel2"]), ("active", c["panel2"])],
-        )
+        style.configure("TNotebook.Tab", background=c["panel"], foreground=c["text"])
         self.root.configure(bg=c["bg"])
         self.body.set_canvas_bg(c["bg"])
         header_bg = btn.get("header", btn.get("primary", DEFAULT_BUTTON_COLORS["header"]))
@@ -2329,10 +2310,26 @@ class App:
         # Mode: Dark / Light / Custom
         cur_mode = "custom" if self.prefs.get("custom_theme_enabled", False) else str(self.prefs.get("mode", "dark") or "dark")
         mode_var = tk.StringVar(value=cur_mode if cur_mode in ("dark","light","custom") else "dark")
+        def _on_mode_change(*_):
+            # If user switches to Custom, keep the current Dark/Light base (don't silently flip).
+            if mode_var.get() != "custom":
+                return
+            try:
+                base = DEFAULT_THEME_DARK if self.prefs.get("mode") == "dark" else DEFAULT_THEME_LIGHT
+                # If fields still match Dark defaults while we're in Light mode, seed from Light base.
+                if self.prefs.get("mode") == "light":
+                    current_vals = {k: v.get().strip() for k, v in color_vars.items()}
+                    if current_vals and current_vals == dict(DEFAULT_THEME_DARK):
+                        for k, v in base.items():
+                            if k in color_vars:
+                                color_vars[k].set(str(v))
+            except Exception:
+                pass
+
 
         mode_row = ttk.Frame(app_sf.inner); mode_row.pack(fill="x", padx=12, pady=(0, 10))
         ttk.Label(mode_row, text="Mode:").pack(side="left")
-        ttk.Radiobutton(mode_row, text="Dark (Default)", value="dark", variable=mode_var).pack(side="left", padx=(12,0))
+        ttk.Radiobutton(mode_row, text="Dark", value="dark", variable=mode_var).pack(side="left", padx=(12,0))
         ttk.Radiobutton(mode_row, text="Light", value="light", variable=mode_var).pack(side="left", padx=(12,0))
         ttk.Radiobutton(mode_row, text="Custom", value="custom", variable=mode_var).pack(side="left", padx=(12,0))
 
@@ -2345,6 +2342,14 @@ class App:
         ttk.Spinbox(row, from_=8, to=24, textvariable=font_var, width=6).pack(side="left", padx=(8, 0))
         ttk.Label(row, text="(applies after Apply)").pack(side="left", padx=(8, 0))
 
+        # Helper font family (affects Helper box only)
+        helper_fonts = ["Consolas", "Courier New", "Segoe UI", "Arial", "Calibri", "Tahoma"]
+        hf_row = ttk.Frame(app_sf.inner); hf_row.pack(fill="x", padx=12, pady=(0, 10))
+        ttk.Label(hf_row, text="Helper font:").pack(side="left")
+        helper_font_var = tk.StringVar(value=str(self.prefs.get("helper_font_family") or "Consolas"))
+        hf_combo = ttk.Combobox(hf_row, textvariable=helper_font_var, values=helper_fonts, state="readonly", width=20)
+        hf_combo.pack(side="left", padx=(8, 0))
+
         ttk.Separator(app_sf.inner).pack(fill="x", padx=12, pady=10)
 
         # Theme colours (Custom mode)
@@ -2353,7 +2358,18 @@ class App:
 
         fields = [("bg","Window background"),("panel","Panel background"),("panel2","Secondary panel"),("text","Main text"),("muted","Muted text"),("entry","Entry/dropdown background"),("border","Borders"),("editor_bg","Editor background"),("editor_fg","Editor text")]
         color_vars: Dict[str, tk.StringVar] = {}
-        cur_theme = dict(DEFAULT_THEME_DARK if self.prefs.get("mode")=="dark" else DEFAULT_THEME_LIGHT); cur_theme.update(self.prefs.get("custom_theme", {}))
+        try:
+            mode_var.trace_add("write", _on_mode_change)
+        except Exception:
+            pass
+        base_theme = DEFAULT_THEME_DARK if self.prefs.get("mode")=="dark" else DEFAULT_THEME_LIGHT
+        cur_theme = dict(base_theme)
+        saved_custom = dict(self.prefs.get("custom_theme", {}) or {})
+        # If Custom was enabled while in Light mode and the user hasn't customised yet,
+        # the stored default custom theme may still be Dark defaults. Don't let that force Dark styling.
+        if self.prefs.get("custom_theme_enabled", False) and self.prefs.get("mode")=="light" and saved_custom == dict(DEFAULT_THEME_DARK):
+            saved_custom = {}
+        cur_theme.update(saved_custom)
         grid = ttk.Frame(app_sf.inner); grid.pack(fill="x", padx=12, pady=(0, 12))
 
         theme_entries = []
@@ -2578,6 +2594,7 @@ class App:
             if mode_var.get() in ("dark","light"):
                 self.prefs["mode"] = mode_var.get()
             self.prefs["editor_font_size"]=int(font_var.get())
+            self.prefs["helper_font_family"]=helper_font_var.get()
             self.prefs["custom_theme"]={k:v.get().strip() for k,v in color_vars.items()}
             self.prefs["button_colors"]={k:v.get().strip() for k,v in btn_vars.items()}
             save_prefs(self.prefs)
