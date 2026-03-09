@@ -1,14 +1,15 @@
-# 🎮 Cheat Editor Manager Tool
+# Cheat Editor Manager Tool
 
-![Version](https://img.shields.io/badge/version-1.3.0-blue)
+![Cheat Editor Manager Tool](assets/logo-wide.png)
+
+![Version](https://img.shields.io/badge/version-1.3.2-blue)
 ![Platform](https://img.shields.io/badge/platform-Windows-lightgrey)
 ![Python](https://img.shields.io/badge/python-3.9%2B-blue)
 
-> Edit. Organise. Export.\
-> Cheat files made simple for emulators and modded consoles.
+> Retro-ready cheat editing and export.
+> Built for Switch cheats, RetroArch, emulator patches, and modded console workflows.
 
 ------------------------------------------------------------------------
-
 # 🚀 What Is This?
 
 **Cheat Editor Manager Tool** is a desktop application that allows you
@@ -151,7 +152,7 @@ Use this when you want to:
 
 ------------------------------------------------------------------------
 
-# 🧩 Smart Features (v1.3.0)
+# 🧩 Smart Features (v1.3.2)
 
 -   🔄 Unified export builder (single source of truth)
 -   👁 Live export path preview
@@ -247,25 +248,5 @@ Development Support: ChatGPT
 
 # 📜 License
 
-MIT License
-
-Copyright (c) 2026 Marcus
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+Add your chosen license here (MIT recommended).
 

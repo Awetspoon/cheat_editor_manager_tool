@@ -1,0 +1,280 @@
+Cheat File Creator — Master Explanation (v1.3.2 UI-locked baseline)
+Generated: 2026-02-09 23:03 UTC
+
+Purpose
+- A desktop GUI tool that helps you CREATE, EDIT, and EXPORT cheat files in the correct folder/filename format for different emulators and modded console profiles.
+- It keeps a consistent UI baseline (red header, sticky bottom action bar, scrollable middle content) and a theming system (dark mode + custom colours).
+
+============================================================
+1) High-level Architecture (mental model)
+============================================================
+
+A) App class (main window controller)
+- Owns the root window, global state, theme state, paths/settings state, and the current emulator/console selection.
+- Builds the UI once, then updates UI state as the user changes selection, toggles dark mode, applies themes, loads files, exports, etc.
+
+B) UI layout is split into 3 zones:
+1) Top Header (fixed)
+   - Red header bar with:
+     - Title (left)
+     - Right-side header controls: Dark Mode, Templates…, Help Links, Settings
+   - This area never scrolls.
+
+2) Middle Content (scrollable)
+   - Contains the main form controls:
+     - Emulator/Console dropdown + connected ☰ menu button
+     - Export Root + folder buttons
+     - Helper box (contextual instructions + optional fields like Switch TID/BID)
+     - Formatting helper buttons (Heading/Bold/Undo/Redo/Clear text)
+     - Wrap text toggle
+     - Cheat Editor label + cheat editor text box (now half-width; vertical scroll only)
+   - This area scrolls independently (so bottom action buttons remain visible).
+
+3) Bottom Action Bar (fixed / sticky)
+   - Always visible at the bottom:
+     - Load File…
+     - Quick Export
+     - Convert & Save…
+   - This bar never scrolls.
+
+C) Data storage model
+- Settings, themes, templates, and user overrides are saved locally (exact folders/filenames depend on the implementation, but conceptually):
+  - App Settings (JSON) — theme mode, custom colours, editor font size, paths, last emulator used, etc.
+  - Templates (per emulator) — saved cheat “starting points”
+  - Help Links — editable list of web links
+  - Emulator path overrides — optional per-emulator/custom folder override rules
+
+============================================================
+2) Main Window — Sections and what they do
+============================================================
+
+A) Emulator / Console control row
+- Emulator/Console dropdown:
+  - Changes the active profile (ex: Atmosphère (Switch) (CFW), Yuzu, Ryujinx, RetroArch cores, etc.)
+  - Triggers: helper box text changes, expected output paths/extensions changes, template list changes, and any extra fields (like TID/BID).
+
+- ☰ button (connected / flush with dropdown):
+  - A compact “extra options” menu tied to the current emulator selection.
+  - Typical responsibilities:
+    - Sort, manage profiles, open paths/override UI, or any per-profile utilities.
+  - The goal is to keep the main UI clean while still exposing advanced actions.
+
+B) Export Root row
+- Export Root textbox:
+  - Base folder used for Quick Export (the app creates correct subfolders below this).
+  - UI change: reduced width to match the “half-width” layout style.
+
+- Open Folder
+  - Opens the Export Root location in the file explorer.
+
+- Change…
+  - Lets user choose a new Export Root path via folder picker.
+
+- Reset Default
+  - Restores Export Root to the default app path.
+
+C) Helper section (contextual)
+- A framed helper box that changes based on emulator/console.
+- Shows:
+  - Where cheat files must be placed
+  - Which file extensions are expected
+  - Any required identifiers (ex: Switch TitleID + BuildID)
+- Switch profile special fields:
+  - TitleID (TID) input
+  - BuildID(s) (BID) input
+  - The helper reminds that BID changes when the game updates.
+
+(Important UI baseline)
+- Helper box is now half-width (matching the editor), and its text wraps cleanly.
+
+D) Formatting helper buttons row
+- Heading
+  - Inserts or formats a “heading” style line in the editor (commonly a bracketed title like [Cheat Name] or a separator).
+- Bold
+  - Applies a simple bold style convention supported by the editor (if implemented).
+- Undo / Redo
+  - Editor undo/redo actions (Text widget undo stack).
+- Clear text (destructive)
+  - Clears only the editor text contents after a confirmation.
+  - Does NOT delete templates, files, settings, or anything on disk.
+
+E) Wrap text toggle
+- When enabled:
+  - Lines wrap visually within the editor.
+  - Horizontal scrollbar is unnecessary and removed for the editor in this UI baseline.
+- When disabled:
+  - Lines do not wrap (horizontal scrolling could be enabled in other versions, but v1.3.2 focuses on wrap-first readability).
+
+F) Cheat Editor
+- Main text box where the user writes/edits cheat code.
+- This is what gets exported/saved/converted.
+- UI change in v1.3.2:
+  - Width reduced to roughly half, matching helper box.
+  - Vertical scrollbar only; no bottom horizontal scrollbar.
+  - Better for focus and readability.
+
+============================================================
+3) Sticky Bottom Action Bar — core workflows
+============================================================
+
+A) Load File…
+Purpose:
+- Load an existing cheat file into the editor.
+Behaviours (typical):
+- Detects profile info if possible:
+  - Switch TID/BID formats
+  - RetroArch core mapping (if file content/path hints allow)
+- Optionally supports drag-and-drop if implemented.
+- After load:
+  - Editor fills with file contents
+  - Status updates show loaded path/name
+
+B) Quick Export
+Purpose:
+- “One-click export” into the correct folder structure for the currently selected profile.
+Typical steps:
+1) Validate required inputs (ex: Switch needs TitleID; BID may be required depending on target).
+2) Build the correct folder path under Export Root (or override path if configured).
+3) Choose correct file extension(s) for that profile.
+4) Write file(s) to disk.
+5) Show success/error status.
+
+C) Convert & Save…
+Purpose:
+- Save your editor text anywhere, with any extension.
+Typical steps:
+1) Prompt for output location + filename (Save As dialog).
+2) Write editor content to that file exactly.
+3) Does NOT force profile folder structure—this is “manual save”.
+
+============================================================
+4) Header Buttons — dialogs and responsibilities
+============================================================
+
+A) Dark Mode (header)
+- Primary toggle for light/dark mode.
+- Per your locked wording:
+  - The top button controls mode; Settings is for fine-tuning.
+
+B) Templates…
+- Opens a Templates window for the current emulator/console.
+- Shows:
+  - Template list (left)
+  - Preview (read-only) (right)
+- Actions:
+  - Insert: inserts template into editor at cursor or end (keeps existing text)
+  - Load & replace: replaces editor contents with template
+
+C) Help Links
+- Opens editable list of useful cheat resources.
+- Table: Name + URL
+- Buttons:
+  - Open (launch in browser)
+  - Add / Edit / Remove
+  - Close
+
+D) Settings
+- Opens Settings window with tabs (as in your baseline):
+  - Appearance
+    - Custom theme enable (overrides colours, including text)
+    - Editor font size
+  - Theme colours
+    - The colours that affect backgrounds/textboxes/labels/etc.
+  - Button colours
+    - Header, secondary, destructive, etc.
+  - Emulator paths
+    - Per-emulator path overrides + reset options
+
+============================================================
+5) Theme system (what changes where)
+============================================================
+
+- Dark/Light mode:
+  - Base palette changes backgrounds + text colours to remain readable.
+- Custom theme (when enabled):
+  - Overrides app colours globally, including text.
+  - Must keep textboxes readable in both modes (baseline rule).
+
+Where theme applies:
+- Main window background
+- Helper frame + labels
+- Editor text widget colours
+- Buttons (header/secondary/destructive)
+- Any dialogs (Templates/Help Links/Settings)
+
+============================================================
+6) Key internal functions (what they usually do)
+============================================================
+
+UI build functions
+- build_ui() / _build_ui():
+  - Creates all widgets, assigns layout, binds callbacks, sets scroll and sticky bar rules.
+- make_scrollable_area():
+  - Creates the scrollable middle content region with vertical scroll and consistent inner frame sizing.
+
+Theme functions
+- apply_theme():
+  - Sets colours on all widgets according to current mode + custom overrides.
+  - Ensures text widgets and entry fields remain readable.
+
+Profile functions
+- get_current_profile():
+  - Returns rules for active emulator/console:
+    - target paths
+    - allowed extensions
+    - required fields (TID/BID)
+    - templates namespace
+- update_helper_for_profile():
+  - Updates helper text + shows/hides required fields.
+
+Editor functions
+- get_editor_text() / set_editor_text():
+  - Reads/writes the editor.
+- clear_editor_text():
+  - Confirmation prompt then clears editor only.
+- toggle_wrap():
+  - Switches editor wrap mode.
+
+File I/O functions
+- quick_export():
+  - Uses profile rules to build output path(s) and write file(s).
+- convert_and_save():
+  - Save As anywhere with chosen filename/ext.
+- load_file():
+  - Loads selected file into editor; may attempt profile detection.
+
+Utility functions
+- open_folder(path):
+  - Opens explorer at a path.
+- status_update(msg):
+  - Updates status bar text.
+
+============================================================
+7) UI-locked baseline rules (the ones you care about)
+============================================================
+
+- No overlap between Main UI and Settings responsibilities.
+- Sticky bottom action bar always visible when maximized.
+- Scrollbars appear where content can overflow; middle content scrolls, not header/footer.
+- Emulator dropdown + ☰ are visually connected (flush, same height).
+- Helper box and editor are half-width (focus layout).
+- Editor uses vertical scroll only (no bottom horizontal bar) with wrap enabled.
+- Clear text is destructive, confirmed, and ONLY clears editor contents.
+- Custom colour system remains the “only way” to change all colours (including text) when enabled.
+
+============================================================
+8) If you ever rebuild from scratch (recommended rebuild plan)
+============================================================
+
+1) Implement the 3-zone layout first (Header / Scrollable Middle / Sticky Bottom Bar).
+2) Implement profile selection system (emulator/console rules object).
+3) Implement editor with wrap + undo/redo + clear confirmation.
+4) Implement file I/O (Load, Quick Export, Convert & Save).
+5) Implement Templates window (list + preview + insert/replace).
+6) Implement Help Links window (table + open/add/edit/remove).
+7) Implement Settings tabs (appearance/theme/button/emulator paths).
+8) Apply theme to every widget (including dialogs).
+
+That order prevents the “fix one thing, break five things” problem.
+
+END

@@ -1,0 +1,259 @@
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Dict
+
+APP_NAME = "Cheat Editor Manager Tool"
+APP_TAGLINE = "Retro-ready cheat editing and export"
+APP_VERSION = "1.3.2"
+
+APP_DIR = Path.home() / "CheatCreator"
+APP_DIR.mkdir(parents=True, exist_ok=True)
+
+PREFS_FILE = APP_DIR / "prefs.json"
+TEMPLATES_DIR = APP_DIR / "templates"
+TEMPLATES_DIR.mkdir(parents=True, exist_ok=True)
+
+DEFAULT_HELP_LINKS = [
+    {"name": "GameHacking.org (Cheat DB)", "url": "https://gamehacking.org"},
+    {"name": "CodeTwink (Cheat Codes)", "url": "https://www.codetwink.com"},
+    {"name": "CMGSCCC (PS2 Cheat Codes)", "url": "https://www.cmgsccc.com"},
+    {"name": "WiiRD Code Database", "url": "https://geckocodes.org"},
+    {"name": "CheatSlips (Switch Cheats)", "url": "https://cheatslips.com"},
+    {"name": "GBAtemp — Cheats Forum", "url": "https://gbatemp.net/forums/nintendo-switch-cheats.289/"},
+    {"name": "RetroArch Docs — Cheats", "url": "https://docs.libretro.com/guides/cheat-codes/"},
+    {"name": "Dolphin Emulator — Guides", "url": "https://dolphin-emu.org/docs/guides/"},
+    {"name": "PCSX2 Wiki — Cheats", "url": "https://wiki.pcsx2.net/Category:Cheats"},
+    {"name": "PPSSPP — Cheats (Docs)", "url": "https://www.ppsspp.org/docs/reference/ini-file/#cheats"},
+    {"name": "DuckStation — Cheat Codes", "url": "https://www.duckstation.org/codes.html"},
+    {"name": "RPCS3 Wiki — Game Patches", "url": "https://wiki.rpcs3.net/index.php?title=Help:Game_Patches"},
+    {"name": "Xenia — Patches (GitHub)", "url": "https://github.com/xenia-project/xenia/wiki/Options#patches"},
+    {"name": "Cemu — Graphic Packs", "url": "https://cemu.info/#graphic-packs"},
+]
+
+DEFAULT_RETROARCH_CORES = [
+    "Default (no subfolder)",
+    "mGBA",
+    "VBA-M",
+    "Gambatte",
+    "SameBoy",
+    "DeSmuME",
+    "Mesen",
+    "Nestopia UE",
+    "FCEUmm",
+    "Snes9x",
+    "Snes9x 2010",
+    "Mupen64Plus-Next",
+    "ParaLLEl N64",
+    "Genesis Plus GX",
+    "PicoDrive",
+    "PCSX ReARMed",
+    "Beetle PSX",
+    "Beetle PSX HW",
+    "FinalBurn Neo",
+    "MAME 2003-Plus",
+    "Flycast",
+]
+
+DEFAULT_PROFILES: Dict[str, dict] = {'Atmosphère (Switch) (CFW)': {'extensions': ['.txt'],
+                               'subdir': 'atmosphere/contents/<TID>/cheats',
+                               'filename_hint': '<BID>',
+                               'notes': 'Atmosphère: SD:/atmosphere/contents/<TID>/cheats/<BID>.txt (BuildID changes '
+                                        'with updates)',
+                               'kind': 'switch'},
+ 'Yuzu (Switch) - PC': {'extensions': ['.txt'],
+                        'subdir': 'yuzu/load/<TID>/<Cheat Name>/cheats',
+                        'filename_hint': '<BID>',
+                        'notes': 'Yuzu (PC): %APPDATA%/yuzu/load/<TID>/<Cheat Name>/cheats/<BID>.txt',
+                        'kind': 'switch'},
+ 'Ryujinx (Switch) - PC': {'extensions': ['.txt'],
+                           'subdir': 'Ryujinx/mods/contents/<TID>/<Cheat Name>/cheats',
+                           'filename_hint': '<BID>',
+                           'notes': 'Ryujinx (PC): %APPDATA%/Ryujinx/mods/contents/<TID>/<Cheat Name>/cheats/<BID>.txt',
+                           'kind': 'switch'},
+ 'Sudachi (Switch) - PC': {'extensions': ['.txt'],
+                           'subdir': 'Sudachi/load/<TID>/<Cheat Name>/cheats',
+                           'filename_hint': '<BID>',
+                           'notes': 'Sudachi (PC): Yuzu-style load/<TID>/<Cheat Name>/cheats/<BID>.txt',
+                           'kind': 'switch'},
+ 'Suyu (Switch) - PC': {'extensions': ['.txt'],
+                        'subdir': 'Suyu/load/<TID>/<Cheat Name>/cheats',
+                        'filename_hint': '<BID>',
+                        'notes': 'Suyu (PC): Yuzu-style load/<TID>/<Cheat Name>/cheats/<BID>.txt',
+                        'kind': 'switch'},
+ 'Citra (3DS) - PC': {'extensions': ['.txt'],
+                      'subdir': 'RetroArch/saves/Citra/cheats',
+                      'filename_hint': '<TitleID>',
+                      'notes': 'RetroArch Citra core: saves/Citra/cheats/<TitleID>.txt. Quick Export adds '
+                               '*citra_enabled if it is missing.',
+                      'kind': 'titleid',
+                      'titleid_label': 'TitleID / Game ID:',
+                      'titleid_hint': 'Use the 16-character 3DS TitleID / Game ID used by the Citra core cheat file.',
+                      'citra_enabled': True},
+ 'RetroArch (Multi-platform)': {'extensions': ['.cht'],
+                                'subdir': 'RetroArch/cheats/<Core Name>',
+                                'filename_hint': '<Game>',
+                                'notes': 'RetroArch is multi-platform. Cheats: cheats/<Core Name>/<Game>.cht',
+                                'kind': 'retroarch'},
+ 'Dolphin (GC/Wii) - PC': {'extensions': ['.ini'],
+                           'subdir': 'Dolphin Emulator/GameSettings',
+                           'filename_hint': '<GameID>',
+                           'notes': 'Dolphin: Documents/Dolphin Emulator/GameSettings/<GameID>.ini (override if your '
+                                    'Dolphin user folder differs)',
+                           'kind': 'idfile',
+                           'id_label': 'Game ID:',
+                           'id_hint': 'Use the 6-character Dolphin Game ID from the GameSettings filename.',
+                           'id_regex': '^[A-Z0-9]{6}$',
+                           'id_placeholder': '<GameID>',
+                           'id_uppercase': True},
+ 'PCSX2 (PS2) - PC': {'extensions': ['.pnach'],
+                      'subdir': 'PCSX2/Cheats',
+                      'filename_hint': '<CRC>',
+                      'notes': 'PCSX2: Cheats/<CRC>.pnach (CRC must match game; override if your cheats folder '
+                               'differs)',
+                      'kind': 'idfile',
+                      'id_label': 'CRC:',
+                      'id_hint': 'Use the 8-character CRC from the pnach filename the game expects.',
+                      'id_regex': '^[0-9A-F]{8}$',
+                      'id_placeholder': '<CRC>',
+                      'id_normalization': 'hex',
+                      'id_error': 'This Quick Export requires an 8-character CRC.'},
+ 'PPSSPP (PSP) - PC': {'extensions': ['.ini'],
+                       'subdir': 'PPSSPP/memstick/PSP/Cheats',
+                       'filename_hint': '<GameID>',
+                       'notes': 'PPSSPP: memstick/PSP/Cheats/<GameID>.ini (enable cheats first; override if your '
+                                'Memstick differs)',
+                       'kind': 'idfile',
+                       'id_label': 'Game ID:',
+                       'id_hint': 'Use the PPSSPP Game ID from the cheat filename, for example ULUS10567.',
+                       'id_regex': '^[A-Z0-9_-]{6,16}$',
+                       'id_placeholder': '<GameID>',
+                       'id_uppercase': True,
+                       'id_error': 'This Quick Export requires a PPSSPP Game ID (for example ULUS10567).'},
+ 'DuckStation (PS1) - PC': {'extensions': ['.cht'],
+                            'subdir': 'DuckStation/cheats',
+                            'filename_hint': '<SERIAL>',
+                            'notes': 'DuckStation: cheats/<SERIAL>.cht (location varies by install-use Emulator Paths '
+                                     'override if needed)',
+                            'kind': 'idfile',
+                            'id_label': 'Serial:',
+                            'id_hint': 'Use the disc serial DuckStation expects, for example SLUS-01041.',
+                            'id_regex': '^[A-Z0-9_-]{6,16}$',
+                            'id_placeholder': '<SERIAL>',
+                            'id_uppercase': True,
+                            'id_error': 'This Quick Export requires a DuckStation serial (for example SLUS-01041).'},
+ 'Cemu (Wii U) - PC': {'extensions': ['.txt'],
+                       'subdir': 'Cemu/graphicPacks/<Pack Name>',
+                       'filename_hint': 'patches',
+                       'notes': 'Cemu: graphicPacks/<Pack Name>/patches.txt (pack name derived from first Heading; '
+                                'override if needed)',
+                       'kind': 'generic'},
+ 'Xenia (Xbox 360) - PC': {'extensions': ['.patch.toml'],
+                           'subdir': 'Xenia/patches',
+                           'filename_hint': '<TitleID>',
+                           'notes': 'Xenia: patches/<TitleID>.patch.toml',
+                           'kind': 'idfile',
+                           'id_label': 'TitleID:',
+                           'id_hint': 'Use the 8-character Xbox 360 TitleID from the patch filename.',
+                           'id_regex': '^[0-9A-F]{8}$',
+                           'id_placeholder': '<TitleID>',
+                           'id_normalization': 'hex',
+                           'id_error': 'This Quick Export requires an 8-character Xbox 360 TitleID.'},
+ 'RPCS3 (PS3) - PC': {'extensions': ['.yml'],
+                      'subdir': 'RPCS3',
+                      'filename_hint': 'patch',
+                      'notes': 'RPCS3: patch.yml (legacy-compatible). You can also use Patch Manager; override if '
+                               'needed.',
+                      'kind': 'singlefile',
+                      'fixed_filename': 'patch.yml'},
+ 'Nintendo 3DS (CFW) (Luma)': {'extensions': ['.txt'],
+                               'subdir': 'luma/plugins/<TitleID>',
+                               'filename_hint': '<TitleID>',
+                               'notes': 'Luma plugin layout: SD:/luma/plugins/<TitleID>/cheats.txt',
+                               'kind': 'titleid',
+                               'fixed_filename': 'cheats.txt',
+                               'titleid_label': 'TitleID:',
+                               'titleid_hint': 'Exports the title-ID plugin folder used by Luma / CTRPF text cheat packs.'},
+ 'PS Vita (CFW) (taiHEN)': {'extensions': ['.txt'],
+                            'subdir': 'MODDED/PSVITA/cheats',
+                            'filename_hint': '<Game>',
+                            'notes': 'Modded console export (paths vary). Use Emulator Paths override to point to your '
+                                     'SD card/homebrew folder.',
+                            'kind': 'modded'},
+ 'PSP (CFW)': {'extensions': ['.txt'],
+               'subdir': 'MODDED/PSP/cheats',
+               'filename_hint': '<Game>',
+               'notes': 'Modded console export (paths vary). Use Emulator Paths override to point to your SD '
+                        'card/homebrew folder.',
+               'kind': 'modded'},
+ 'Wii (Homebrew)': {'extensions': ['.txt'],
+                    'subdir': 'MODDED/WII/cheats',
+                    'filename_hint': '<Game>',
+                    'notes': 'Modded console export (paths vary). Use Emulator Paths override to point to your SD '
+                             'card/homebrew folder.',
+                    'kind': 'modded'},
+ 'Wii U (CFW)': {'extensions': ['.txt'],
+                 'subdir': 'MODDED/WIIU/cheats',
+                 'filename_hint': '<Game>',
+                 'notes': 'Modded console export (paths vary). Use Emulator Paths override to point to your SD '
+                          'card/homebrew folder.',
+                 'kind': 'modded'}}
+
+DEFAULT_BUTTON_COLORS = {
+    "header": "#432f23",
+    "primary": "#ca4c2d",
+    "secondary": "#6a503c",
+    "toolbar": "#7a5c45",
+    "danger": "#a92b2b",
+}
+
+DEFAULT_THEME_DARK = {
+    "bg": "#14100d",
+    "panel": "#1d1713",
+    "panel2": "#281f19",
+    "text": "#f5e7cf",
+    "muted": "#d1bea2",
+    "entry": "#120f0c",
+    "border": "#5b4333",
+    "editor_bg": "#101513",
+    "editor_fg": "#f4ecd8",
+    "accent": "#ca4c2d",
+}
+
+DEFAULT_THEME_LIGHT = {
+    "bg": "#f7f3ea",
+    "panel": "#fffdfa",
+    "panel2": "#f2e7d6",
+    "text": "#201711",
+    "muted": "#5d4938",
+    "entry": "#fffdfa",
+    "border": "#b89e7d",
+    "editor_bg": "#fffefa",
+    "editor_fg": "#201711",
+    "accent": "#ca4c2d",
+}
+
+DEFAULT_PREFS: dict = {
+    "mode": "light",
+    "wrap": True,
+    "editor_font_size": 11,
+    "help_links": list(DEFAULT_HELP_LINKS),
+    "custom_theme_enabled": False,
+    "custom_theme": dict(DEFAULT_THEME_DARK),
+    "button_colors": dict(DEFAULT_BUTTON_COLORS),
+    "templates_default": {},
+    "retroarch_cores": list(DEFAULT_RETROARCH_CORES),
+    "retroarch_core": DEFAULT_RETROARCH_CORES[0],
+    "emulator_paths": {},
+    "custom_profiles": {},
+    "profile_sort": "default",
+    "window_remember": True,
+    "window_geometry": "",
+    "window_asked_once": False,
+    "branding_revision": 2,
+}
+
+
+
+
+
