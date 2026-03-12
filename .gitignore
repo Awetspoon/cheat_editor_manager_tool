@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+.pytest_cache/
+.venv/
+venv/
+build/
+dist/
+*.spec.bak
+CheatCreator/
