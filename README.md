@@ -1,32 +1,35 @@
 # Cheat Editor Manager Tool
 
-![Cheat Editor Manager Tool](assets/logo-wide.png)
-
-![App Full Screen](assets/app-fullscreen.png)
+![Cheat Editor Manager Tool (Full Screen)](assets/app-fullscreen.png)
 
 ![Version](https://img.shields.io/badge/version-1.3.3-blue)
 ![Platform](https://img.shields.io/badge/platform-Windows-lightgrey)
-![Python](https://img.shields.io/badge/python-3.9%2B-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
 
-Retro-ready cheat editing and export for Switch, emulators, and modded console workflows.
+Cheat Editor Manager Tool is a Windows desktop app for creating, editing, validating, and exporting cheat files to the correct folder layout for each emulator or modded console target.
 
-## What It Does
+## What This Program Does
 
-- Edit cheat files safely in one place
-- Auto-detect IDs where possible when loading files
-- Build correct folder/file layouts for each target
-- Preview export output before writing
-- Support emulator-only custom profiles with validation
+- Loads existing cheat files and keeps editing focused on cheat text only
+- Auto-detects IDs from known layouts when possible (for example Switch TID/BID, Citra, Dolphin, PPSSPP)
+- Builds correct export paths automatically with **Quick Export**
+- Shows live export preview before writing files
+- Supports emulator path overrides and profile-based layouts
+- Supports emulator custom profiles while keeping built-in targets stable
 
 ## Supported Targets
 
-### PC Emulators
+### Switch / CFW
 
+- Atmosphere (Switch CFW)
 - Yuzu
 - Ryujinx
 - Sudachi
 - Suyu
-- Citra
+
+### Emulator / Console Profiles
+
+- Citra (3DS)
 - RetroArch
 - Dolphin
 - PCSX2
@@ -35,34 +38,37 @@ Retro-ready cheat editing and export for Switch, emulators, and modded console w
 - Cemu
 - Xenia
 - RPCS3
-
-### CFW / Modded Console Targets
-
-- Atmosphere (Switch)
 - Nintendo 3DS (Luma)
 - PSP (CFW)
 - PS Vita (taiHEN)
 - Wii (Homebrew)
 - Wii U (CFW)
 
-## Build
+## How To Use
+
+1. Select a profile (emulator/console target).
+2. Load an existing cheat file or paste/edit cheat text.
+3. Fill required IDs (TID/BID or profile ID field) when needed.
+4. Use **Quick Export** to write files to the correct layout.
+5. Use **Convert & Save** when you want manual filename/location control.
+
+## Build (Windows)
 
 ```bash
 python -m PyInstaller --clean --noconfirm cheat_editor_manager_tool.spec
 ```
 
-The Windows executable is generated at:
+Generated executable:
 
 `dist/cheat_editor_manager_tool.exe`
 
-## Release
+## Download
 
-Latest release tag: `v1.3.3`
+Latest release:
 
-Direct download (Windows EXE):
-
-`https://github.com/Awetspoon/cheat_editor_manager_tool/releases/download/v1.3.3/cheat_editor_manager_tool.exe`
+`https://github.com/Awetspoon/cheat_editor_manager_tool/releases/latest`
 
 ## License
 
-MIT License. See `LICENSE`.
+This project is licensed under the **MIT License**.
+See [LICENSE](LICENSE).

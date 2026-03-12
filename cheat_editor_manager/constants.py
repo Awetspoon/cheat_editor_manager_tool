@@ -5,7 +5,7 @@ from typing import Dict
 
 APP_NAME = "Cheat Editor Manager Tool"
 APP_TAGLINE = "Retro-ready cheat editing and export"
-APP_VERSION = "1.3.2"
+APP_VERSION = "1.3.3"
 
 APP_DIR = Path.home() / "CheatCreator"
 APP_DIR.mkdir(parents=True, exist_ok=True)
@@ -20,15 +20,15 @@ DEFAULT_HELP_LINKS = [
     {"name": "CMGSCCC (PS2 Cheat Codes)", "url": "https://www.cmgsccc.com"},
     {"name": "WiiRD Code Database", "url": "https://geckocodes.org"},
     {"name": "CheatSlips (Switch Cheats)", "url": "https://cheatslips.com"},
-    {"name": "GBAtemp — Cheats Forum", "url": "https://gbatemp.net/forums/nintendo-switch-cheats.289/"},
-    {"name": "RetroArch Docs — Cheats", "url": "https://docs.libretro.com/guides/cheat-codes/"},
-    {"name": "Dolphin Emulator — Guides", "url": "https://dolphin-emu.org/docs/guides/"},
-    {"name": "PCSX2 Wiki — Cheats", "url": "https://wiki.pcsx2.net/Category:Cheats"},
-    {"name": "PPSSPP — Cheats (Docs)", "url": "https://www.ppsspp.org/docs/reference/ini-file/#cheats"},
-    {"name": "DuckStation — Cheat Codes", "url": "https://www.duckstation.org/codes.html"},
-    {"name": "RPCS3 Wiki — Game Patches", "url": "https://wiki.rpcs3.net/index.php?title=Help:Game_Patches"},
-    {"name": "Xenia — Patches (GitHub)", "url": "https://github.com/xenia-project/xenia/wiki/Options#patches"},
-    {"name": "Cemu — Graphic Packs", "url": "https://cemu.info/#graphic-packs"},
+    {"name": "GBAtemp ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Cheats Forum", "url": "https://gbatemp.net/forums/nintendo-switch-cheats.289/"},
+    {"name": "RetroArch Docs ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Cheats", "url": "https://docs.libretro.com/guides/cheat-codes/"},
+    {"name": "Dolphin Emulator ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Guides", "url": "https://dolphin-emu.org/docs/guides/"},
+    {"name": "PCSX2 Wiki ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Cheats", "url": "https://wiki.pcsx2.net/Category:Cheats"},
+    {"name": "PPSSPP ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Cheats (Docs)", "url": "https://www.ppsspp.org/docs/reference/ini-file/#cheats"},
+    {"name": "DuckStation ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Cheat Codes", "url": "https://www.duckstation.org/codes.html"},
+    {"name": "RPCS3 Wiki ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Game Patches", "url": "https://wiki.rpcs3.net/index.php?title=Help:Game_Patches"},
+    {"name": "Xenia ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Patches (GitHub)", "url": "https://github.com/xenia-project/xenia/wiki/Options#patches"},
+    {"name": "Cemu ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Graphic Packs", "url": "https://cemu.info/#graphic-packs"},
 ]
 
 DEFAULT_RETROARCH_CORES = [
@@ -55,10 +55,10 @@ DEFAULT_RETROARCH_CORES = [
     "Flycast",
 ]
 
-DEFAULT_PROFILES: Dict[str, dict] = {'Atmosphère (Switch) (CFW)': {'extensions': ['.txt'],
+DEFAULT_PROFILES: Dict[str, dict] = {'Atmosphere (Switch) (CFW)': {'extensions': ['.txt'],
                                'subdir': 'atmosphere/contents/<TID>/cheats',
                                'filename_hint': '<BID>',
-                               'notes': 'Atmosphère: SD:/atmosphere/contents/<TID>/cheats/<BID>.txt (BuildID changes '
+                               'notes': 'Atmosphere: SD:/atmosphere/contents/<TID>/cheats/<BID>.txt (BuildID changes '
                                         'with updates)',
                                'kind': 'switch'},
  'Yuzu (Switch) - PC': {'extensions': ['.txt'],

@@ -9,6 +9,8 @@ def configure_tcl_environment() -> None:
     if getattr(sys, "frozen", False):
         return
 
+    if os.environ.get("TCL_LIBRARY") and os.environ.get("TK_LIBRARY"):
+        return
     package_root = Path(__file__).resolve().parent
     repo_root = package_root.parent
     vendor_root = repo_root / "vendor" / "tcl"
@@ -17,13 +19,10 @@ def configure_tcl_environment() -> None:
     if not tcl_dir.exists() or not tk_dir.exists():
         return
 
-    try:
-        cwd = Path.cwd()
-        tcl_value = os.path.relpath(tcl_dir, cwd).replace("\\", "/")
-        tk_value = os.path.relpath(tk_dir, cwd).replace("\\", "/")
-    except Exception:
-        tcl_value = str(tcl_dir)
-        tk_value = str(tk_dir)
+    # Absolute paths are more reliable than relative ones for Tk startup
+    # (especially when launch context/cwd changes across tools/processes).
+    tcl_value = str(tcl_dir.resolve())
+    tk_value = str(tk_dir.resolve())
 
     os.environ["TCL_LIBRARY"] = tcl_value
     os.environ["TK_LIBRARY"] = tk_value

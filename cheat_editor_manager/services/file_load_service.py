@@ -140,7 +140,7 @@ def load_file_into_app(app, filepath: Optional[str] = None):
             pass
 
 
-    # AtmosphÃ¨re: .../atmosphere/contents/<TID>/cheats/<BID>.txt
+    # Atmosphere/contents/<TID>/cheats/<BID>.txt
     if "/atmosphere/contents/" in sl and "/cheats/" in sl:
         try:
             tid_raw = sl.split("/atmosphere/contents/")[-1].split("/")[0]
@@ -148,13 +148,13 @@ def load_file_into_app(app, filepath: Optional[str] = None):
             if len(tid) == 16:
                 self.tid_var.set(tid)
 
-            # AtmosphÃ¨re BuildID is commonly 32 hex, but some sources show 16.
+            # Atmosphere BuildID is commonly 32 hex, but some sources show 16.
             bid = _clean_hex(p.stem)
             if len(bid) in (16, 32):
                 self.bid_var.set(bid)
 
-            # Auto-switch profile to AtmosphÃ¨re
-            atm_name = "AtmosphÃ¨re (Switch) (CFW)"
+            # Auto-switch profile to Atmosphere
+            atm_name = "Atmosphere (Switch) (CFW)"
             if atm_name in self.get_profile_values():
                 self.profile_var.set(atm_name)
                 try:
@@ -234,7 +234,7 @@ def load_file_into_app(app, filepath: Optional[str] = None):
 
         # Only prefer Atmosphere when the text actually looks Switch-specific.
         if metadata["bids"] and len(_clean_hex(self.tid_var.get())) == 16:
-            atm_name = "AtmosphÃ¨re (Switch) (CFW)"
+            atm_name = "Atmosphere (Switch) (CFW)"
             if atm_name in self.get_profile_values():
                 self.profile_var.set(atm_name)
                 try:

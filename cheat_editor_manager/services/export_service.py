@@ -21,12 +21,12 @@ def effective_export_root_for_profile(app, prof: str) -> Path:
     self = app
     """Return the export root for a profile.
 
-    Atmosphère safeguard:
-      - Atmosphère should never 'mysteriously' export somewhere else because of an override.
-      - To keep first-time users safe, Atmosphère always uses the main Export Root (point this at SD root).
+    Atmosphere safeguard:
+      - Atmosphere should never 'mysteriously' export somewhere else because of an override.
+      - To keep first-time users safe, Atmosphere always uses the main Export Root (point this at SD root).
     """
-    # Atmosphère: ignore per-profile overrides to avoid clashing with the official folder structure.
-    if prof.strip() == "Atmosphère (Switch) (CFW)":
+    # Atmosphere: ignore per-profile overrides to avoid clashing with the official folder structure.
+    if prof.strip() == "Atmosphere (Switch) (CFW)":
         return Path(self.export_var.get() or self.prefs.get("export_root", str(APP_DIR)))
 
     override = (self.prefs.get("emulator_paths", {}) or {}).get(prof, "").strip()
@@ -129,7 +129,7 @@ def pick_extension_for_save(app, prof: str):
 
     brow = ttk.Frame(pad); brow.pack(fill="x", pady=(10, 0))
     ttk.Button(brow, text="Cancel", command=cancel).pack(side="right")
-    ttk.Button(brow, text="Continue…", command=ok).pack(side="right", padx=(0, 8))
+    ttk.Button(brow, text="Continueâ€¦", command=ok).pack(side="right", padx=(0, 8))
 
     dlg.wait_window()
     return out["ext"]
