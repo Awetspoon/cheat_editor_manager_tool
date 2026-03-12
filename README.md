@@ -2,7 +2,7 @@
 
 ![Cheat Editor Manager Tool (Full Screen)](assets/app-fullscreen.png)
 
-![Version](https://img.shields.io/badge/version-1.3.3-blue)
+![Version](https://img.shields.io/badge/version-1.3.4-blue)
 ![Platform](https://img.shields.io/badge/platform-Windows-lightgrey)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
@@ -10,12 +10,21 @@ Cheat Editor Manager Tool is a Windows desktop app for creating, editing, valida
 
 ## What This Program Does
 
-- Loads existing cheat files and keeps editing focused on cheat text only
-- Auto-detects IDs from known layouts when possible (for example Switch TID/BID, Citra, Dolphin, PPSSPP)
-- Builds correct export paths automatically with **Quick Export**
-- Shows live export preview before writing files
-- Supports emulator path overrides and profile-based layouts
-- Supports emulator custom profiles while keeping built-in targets stable
+- Edits cheat text safely without mixing folder path logic into the editor
+- Auto-detects IDs from known file layouts when possible (Switch TID/BID, Citra, Dolphin, PPSSPP, etc.)
+- Builds correct target output structure automatically with **Quick Export**
+- Shows live export path preview before writing files
+- Supports emulator path overrides and profile-based export logic
+- Supports emulator custom profiles while preserving built-in profile safety
+
+## Core Brand Assets
+
+- Primary logo: `assets/primary-logo.png`
+- Secondary logo: `assets/secondary-logo.png`
+- Wordmark (text-only): `assets/wordmark.png`
+- Logomark (symbol-only): `assets/logomark.png`
+- App icon: `assets/app-icon.png` and `assets/app-icon.ico`
+- Watermark: `assets/watermark-brand.png`
 
 ## Supported Targets
 
@@ -44,13 +53,12 @@ Cheat Editor Manager Tool is a Windows desktop app for creating, editing, valida
 - Wii (Homebrew)
 - Wii U (CFW)
 
-## How To Use
+## Quick Start
 
-1. Select a profile (emulator/console target).
-2. Load an existing cheat file or paste/edit cheat text.
-3. Fill required IDs (TID/BID or profile ID field) when needed.
-4. Use **Quick Export** to write files to the correct layout.
-5. Use **Convert & Save** when you want manual filename/location control.
+1. Select a target profile.
+2. Load or paste cheat text.
+3. Fill required ID fields (TID/BID or profile ID).
+4. Click **Quick Export** to write correctly structured output.
 
 ## Build (Windows)
 
@@ -58,17 +66,16 @@ Cheat Editor Manager Tool is a Windows desktop app for creating, editing, valida
 python -m PyInstaller --clean --noconfirm cheat_editor_manager_tool.spec
 ```
 
-Generated executable:
+Output executable:
 
 `dist/cheat_editor_manager_tool.exe`
 
 ## Download
 
-Latest release:
+Latest releases page:
 
 `https://github.com/Awetspoon/cheat_editor_manager_tool/releases/latest`
 
 ## License
 
-This project is licensed under the **MIT License**.
-See [LICENSE](LICENSE).
+MIT License. See [LICENSE](LICENSE).
