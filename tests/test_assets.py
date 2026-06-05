@@ -22,9 +22,9 @@ class AssetTests(unittest.TestCase):
         ):
             self.assertFalse((assets_dir / name).exists(), name)
 
-    def test_redesign_concept_is_kept_in_docs_not_assets(self):
+    def test_internal_redesign_concept_is_not_kept_as_runtime_asset(self):
         project_root = asset_path("app-icon.ico").parent.parent
-        self.assertTrue((project_root / "docs" / "redesign-concept.png").exists())
+        self.assertFalse((project_root / "docs" / "redesign-concept.png").exists())
         self.assertFalse((project_root / "assets" / "redesign-concept.png").exists())
 
     def test_runtime_header_uses_one_compact_mark(self):
@@ -45,3 +45,4 @@ class AssetTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

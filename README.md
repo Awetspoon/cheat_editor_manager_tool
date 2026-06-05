@@ -92,25 +92,9 @@ The target dropdown keeps one real list of profile names. It groups CFW/Homebrew
 - Action bar: Load File, Quick Export, Convert & Save, and current status.
 - Dialogs: Settings, Templates, Help Links, RetroArch Cores, and Convert & Save extension selection.
 
-## Redesign And Cleanup Plan
-
-The current cleanup is being tracked in [docs/REDESIGN_PLAN.md](docs/REDESIGN_PLAN.md).
-
-The agreed order is:
-
-1. Clean the structure and app skeleton first.
-2. Rewire startup, services, storage, UI panels, dialogs, assets, tests, and build files.
-3. Apply the visual redesign after the structure is stable.
-4. Run compile, tests, PyInstaller build, and packaged app launch checks before calling the app complete.
-
-The locked redesign concept is stored at [docs/redesign-concept.png](docs/redesign-concept.png). It is a visual target only; it must not introduce fake screens, fake services, or unwired buttons.
-
 ## Documentation
 
-- [docs/README.md](docs/README.md) explains which docs are current and which are archived.
-- [docs/REDESIGN_PLAN.md](docs/REDESIGN_PLAN.md) tracks the active cleanup/redesign checklist.
 - [assets/README.md](assets/README.md) explains runtime assets, retained brand-source files, and screenshot usage.
-- [CLEANUP_PHASE_LOG.md](CLEANUP_PHASE_LOG.md) records the phase-by-phase audit and cleanup work.
 
 ## Install For Local Development
 
@@ -151,14 +135,9 @@ $env:CHEAT_EDITOR_MANAGER_SKIP_GUI_SMOKE = "1"
 You can also check that all Python files compile:
 
 ```bash
-python -m compileall -q assets/generate_brand_assets.py cheat_editor_manager tests scripts hooks
+python -m compileall -q assets/generate_brand_assets.py cheat_editor_manager tests hooks
 ```
 
-To diagnose local Python, Tk/Tcl, and optional dev-tool setup:
-
-```bash
-python scripts/check_dev_environment.py
-```
 
 ## Build For Windows
 
@@ -208,12 +187,6 @@ cheat_editor_manager/
 tests/                    Smoke, storage, profile, theme, help-link, template, RetroArch, and export tests
 assets/                   App icons, logos, screenshots, and generated brand files
 hooks/                    PyInstaller Tk/Tcl packaging hooks
-scripts/                  Utility scripts
-docs/                     Historical project notes
-  README.md               Current-vs-archived docs index
-  REDESIGN_PLAN.md        Current structural cleanup and redesign checklist
-  redesign-concept.png    Locked visual target for the redesign
-  Cheat_File_Creator_MASTER_EXPLANATION_v1_3_2.txt  Archived older product explanation
 vendor/tcl/               Vendored Tcl/Tk runtime files for packaged builds
 MANIFEST.in               Source package include rules
 pyproject.toml            Python package metadata and optional dependency groups
@@ -229,9 +202,6 @@ requirements.txt          Local build helper dependency list
 - Keep `app_actions.py` thin; real export, file-load, template, help-link, and RetroArch core work should stay in services.
 - Split large dialogs by real sections, such as Settings pages, instead of rewriting the whole window at once.
 - Add new emulator targets through profiles first, then add tests for the expected export path.
-- Continue remaining cleanup according to `docs/REDESIGN_PLAN.md` before calling the app complete.
-- `CLEANUP_PHASE_LOG.md` records the current audit/cleanup status phase by phase.
-- `docs/README.md` identifies current docs versus archived notes.
 
 ## Future Expansion Points
 
@@ -257,3 +227,4 @@ Latest releases page:
 ## License
 
 MIT License. See [LICENSE](LICENSE).
+

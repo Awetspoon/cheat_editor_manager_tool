@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 import unittest
 
 
@@ -11,28 +12,30 @@ class DocumentationTests(unittest.TestCase):
 
         self.assertIn("## Main UI Sections", readme)
         self.assertIn("## Future Expansion Points", readme)
-        self.assertIn("docs/README.md", readme)
+        self.assertIn("assets/README.md", readme)
 
-    def test_docs_index_labels_archived_explanation(self):
-        docs_readme = (PROJECT_ROOT / "docs" / "README.md").read_text(encoding="utf-8")
+    def test_readme_does_not_link_removed_internal_cleanup_files(self):
+        readme = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
 
-        self.assertIn("Current Docs", docs_readme)
-        self.assertIn("Archived Docs", docs_readme)
-        self.assertIn("Cheat_File_Creator_MASTER_EXPLANATION_v1_3_2.txt", docs_readme)
-
-    def test_archived_explanation_has_clear_warning(self):
-        archived_doc = (
-            PROJECT_ROOT / "docs" / "Cheat_File_Creator_MASTER_EXPLANATION_v1_3_2.txt"
-        ).read_text(encoding="utf-8")
-
-        self.assertTrue(archived_doc.startswith("ARCHIVED DOCUMENT - NOT CURRENT PRODUCT DOCUMENTATION"))
-
-    def test_main_documentation_links_point_to_existing_files(self):
-        for relative_path in [
+        for removed_reference in (
             "docs/README.md",
             "docs/REDESIGN_PLAN.md",
-            "assets/README.md",
+            "docs/redesign-concept.png",
             "CLEANUP_PHASE_LOG.md",
-        ]:
-            with self.subTest(relative_path=relative_path):
-                self.assertTrue((PROJECT_ROOT / relative_path).exists())
+            "scripts/check_dev_environment.py",
+        ):
+            self.assertNotIn(removed_reference, readme)
+
+    def test_main_documentation_links_point_to_existing_files(self):
+        readme = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+        links = re.findall(r"\[[^\]]+\]\(([^)]+)\)", readme)
+
+        for target in links:
+            if target.startswith(("http://", "https://", "#")):
+                continue
+            with self.subTest(target=target):
+                self.assertTrue((PROJECT_ROOT / target).exists())
+
+
+if __name__ == "__main__":
+    unittest.main()
