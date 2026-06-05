@@ -88,10 +88,11 @@ The target dropdown keeps one real list of profile names. It groups CFW/Homebrew
 
 - Header: app identity, mode toggle, Templates, Help Links, and Settings.
 - Profile controls: target profile selection, profile details, and export-root controls.
-- Helper panel: profile-specific output rules, required ID fields, and live path preview.
+- Helper panel: profile-specific export rules, required ID fields, and live path preview.
+- Help Links: opens saved cheat-reference websites in your browser so you can find source material manually; it does not download or inject cheats automatically.
 - Cheat editor: main text editor with formatting helpers, undo/redo, clear, wrap, scrollbars, and optional drag-and-drop.
 - Action bar: Load File, Quick Export, Convert & Save, and current status.
-- Dialogs: Settings, Templates, Help Links, RetroArch Cores, and Convert & Save extension selection.
+- Dialogs: Settings, Templates, Help Links manager, RetroArch Cores, and Convert & Save extension selection.
 
 ## Documentation
 
