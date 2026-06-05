@@ -8,7 +8,7 @@ HOOKS_ROOT = PROJECT_ROOT / "hooks"
 
 
 a = Analysis(
-    ['cheat_editor_manager_tool.py'],
+    ["cheat_editor_manager_tool.py"],
     pathex=[str(PROJECT_ROOT)],
     binaries=[],
     datas=[
@@ -17,9 +17,9 @@ a = Analysis(
         (str(PROJECT_ROOT / "assets"), "assets"),
     ],
     hiddenimports=[
-        'tkinter',
-        'tkinter.font',
-        'tkinter.ttk',
+        "tkinter",
+        "tkinter.font",
+        "tkinter.ttk",
     ],
     hookspath=[str(HOOKS_ROOT)],
     hooksconfig={},
@@ -36,12 +36,13 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='cheat_editor_manager_tool',
+    name="cheat_editor_manager_tool",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
     upx_exclude=[],
+    icon=str(PROJECT_ROOT / "assets" / "app-icon.ico"),
     runtime_tmpdir=None,
     console=False,
     disable_windowed_traceback=False,
@@ -50,5 +51,3 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
 )
-
-

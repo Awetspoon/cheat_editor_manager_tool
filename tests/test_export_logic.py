@@ -3,6 +3,7 @@ from pathlib import Path
 
 from cheat_editor_manager.export_logic import (
     build_export_plan,
+    build_export_preview_message,
     clean_hex,
     derive_cheat_name,
     extract_switch_metadata,
@@ -325,6 +326,62 @@ class ExportLogicTests(unittest.TestCase):
 
     def test_derive_cheat_name_prefers_heading(self):
         self.assertEqual(derive_cheat_name("# Infinite HP\ncode"), "Infinite HP")
+
+    def test_build_export_preview_message_reports_missing_switch_ids(self):
+        info = {"kind": "switch"}
+        plan = {"kind": "switch", "files": [], "out_dir": Path("C:/Exports")}
+
+        preview = build_export_preview_message(
+            info=info,
+            plan=plan,
+            tid="",
+            bid_text="",
+        )
+
+        self.assertEqual(
+            preview,
+            "Export preview: enter TID + BID to see final output path.",
+        )
+
+    def test_build_export_preview_message_reports_invalid_bid(self):
+        info = {"kind": "switch"}
+        plan = {"kind": "switch", "files": [], "out_dir": Path("C:/Exports")}
+
+        preview = build_export_preview_message(
+            info=info,
+            plan=plan,
+            tid="0100AABBCCDDEEFF",
+            bid_text="bad-bid",
+        )
+
+        self.assertEqual(
+            preview,
+            "Export preview: each BID must be 16 or 32 hex characters.",
+        )
+
+    def test_build_export_preview_message_lists_multiple_outputs(self):
+        info = {"kind": "switch"}
+        plan = {
+            "kind": "switch",
+            "out_dir": Path("C:/Exports/atmosphere/contents/0100AABBCCDDEEFF/cheats"),
+            "files": [
+                Path("C:/Exports/atmosphere/contents/0100AABBCCDDEEFF/cheats/AABBCCDDEEFF0011.txt"),
+                Path("C:/Exports/atmosphere/contents/0100AABBCCDDEEFF/cheats/1122334455667788.txt"),
+            ],
+        }
+
+        preview = build_export_preview_message(
+            info=info,
+            plan=plan,
+            tid="0100AABBCCDDEEFF",
+            bid_text="AABBCCDDEEFF0011,1122334455667788",
+        )
+
+        self.assertIn("Export preview:", preview)
+        self.assertIn("Exports", preview)
+        self.assertIn("atmosphere", preview)
+        self.assertIn("AABBCCDDEEFF0011.txt", preview)
+        self.assertIn("1122334455667788.txt", preview)
 
 
 if __name__ == "__main__":

@@ -1,3 +1,7 @@
+ARCHIVED DOCUMENT - NOT CURRENT PRODUCT DOCUMENTATION
+
+This file is kept as historical context for the older v1.3.2 app state. It may mention old names, old layout decisions, or behaviour that has changed during the cleanup/redesign work. For current guidance, use README.md, docs/README.md, assets/README.md, and docs/REDESIGN_PLAN.md.
+
 Cheat File Creator — Master Explanation (v1.3.2 UI-locked baseline)
 Generated: 2026-02-09 23:03 UTC
 
@@ -22,7 +26,7 @@ B) UI layout is split into 3 zones:
 
 2) Middle Content (scrollable)
    - Contains the main form controls:
-     - Emulator/Console dropdown + connected ☰ menu button
+     - Emulator/CFW dropdown
      - Export Root + folder buttons
      - Helper box (contextual instructions + optional fields like Switch TID/BID)
      - Formatting helper buttons (Heading/Bold/Undo/Redo/Clear text)
@@ -48,8 +52,8 @@ C) Data storage model
 2) Main Window — Sections and what they do
 ============================================================
 
-A) Emulator / Console control row
-- Emulator/Console dropdown:
+A) Emulator / CFW control row
+- Emulator/CFW dropdown:
   - Changes the active profile (ex: Atmosphère (Switch) (CFW), Yuzu, Ryujinx, RetroArch cores, etc.)
   - Triggers: helper box text changes, expected output paths/extensions changes, template list changes, and any extra fields (like TID/BID).
 
@@ -174,16 +178,13 @@ C) Help Links
   - Close
 
 D) Settings
-- Opens Settings window with tabs (as in your baseline):
+- Opens the Settings window with a left menu:
+  - Profiles
+    - Custom emulator profile definitions
   - Appearance
-    - Custom theme enable (overrides colours, including text)
-    - Editor font size
-  - Theme colours
-    - The colours that affect backgrounds/textboxes/labels/etc.
-  - Button colours
-    - Header, secondary, destructive, etc.
-  - Emulator paths
-    - Per-emulator path overrides + reset options
+    - Mode, editor font size, helper font, and custom colours
+  - Export Roots
+    - Per-emulator folder overrides and reset-to-default controls
 
 ============================================================
 5) Theme system (what changes where)
@@ -272,7 +273,7 @@ Utility functions
 4) Implement file I/O (Load, Quick Export, Convert & Save).
 5) Implement Templates window (list + preview + insert/replace).
 6) Implement Help Links window (table + open/add/edit/remove).
-7) Implement Settings tabs (appearance/theme/button/emulator paths).
+7) Implement Settings pages (profiles/appearance/export roots).
 8) Apply theme to every widget (including dialogs).
 
 That order prevents the “fix one thing, break five things” problem.

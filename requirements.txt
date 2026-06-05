@@ -1,3 +1,6 @@
-pyinstaller>=6.18
+# Build/runtime helper dependencies for local development and PyInstaller packaging.
 Pillow>=12.0
+pyinstaller>=6.18
+
+# Optional: enables drag-and-drop file loading. The app still runs without it.
 tkinterdnd2>=0.4

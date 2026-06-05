@@ -279,3 +279,63 @@ def build_export_plan(
         "files": files,
         "ext": ext,
     }
+
+
+def build_export_preview_message(
+    *,
+    info: dict,
+    plan: dict,
+    tid: str,
+    bid_text: str,
+) -> str:
+    """Return the live export preview text shown in the helper panel."""
+    kind = plan.get("kind", info.get("kind", "generic"))
+    files = plan.get("files") or []
+    out_dir = plan.get("out_dir")
+    tid = (tid or "").strip()
+    bid_text = (bid_text or "").strip()
+
+    def is_placeholder(value: str) -> bool:
+        value = (value or "").strip()
+        return value.startswith("<") and value.endswith(">")
+
+    missing_bits: list[str] = []
+    if kind == "switch":
+        if (not tid) or is_placeholder(tid) or len(clean_hex(tid)) != 16:
+            missing_bits.append("TID")
+        if not bid_text:
+            missing_bits.append("BID")
+        else:
+            bids = normalize_bids(bid_text, allow_invalid=True)
+            if not bids or any(len(bid) not in (16, 32) for bid in bids):
+                return "Export preview: each BID must be 16 or 32 hex characters."
+    elif kind == "titleid":
+        if (not tid) or is_placeholder(tid) or len(clean_hex(tid)) != 16:
+            missing_bits.append("TitleID / Game ID")
+    elif kind == "idfile":
+        normalized_id = normalize_profile_id(info, tid)
+        id_regex = str(info.get("id_regex") or "").strip()
+        if (
+            (not tid)
+            or is_placeholder(tid)
+            or not normalized_id
+            or (id_regex and not re.fullmatch(id_regex, normalized_id))
+        ):
+            missing_bits.append(profile_id_label(info))
+
+    if missing_bits:
+        return "Export preview: enter " + " + ".join(missing_bits) + " to see final output path."
+
+    if not files:
+        return "Export preview: (no output)"
+
+    if len(files) == 1:
+        return f"Export preview: {files[0]}"
+
+    names = [Path(file_path).name for file_path in files]
+    shown_names = names[:6]
+    remaining_count = len(names) - len(shown_names)
+    lines = [f"Export preview: {out_dir}", "  " + "  ".join(shown_names)]
+    if remaining_count > 0:
+        lines.append(f"  ... +{remaining_count} more")
+    return "\n".join(lines)

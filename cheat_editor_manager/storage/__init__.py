@@ -8,9 +8,11 @@ from .template_store import ensure_demo_templates, list_templates, profile_templ
 
 PREFS_FILE = Path(DEFAULT_PREFS_FILE)
 
+
 def load_prefs() -> dict:
     _prefs_store.PREFS_FILE = PREFS_FILE
     return _prefs_store.load_prefs()
+
 
 def save_prefs(prefs: dict) -> None:
     _prefs_store.PREFS_FILE = PREFS_FILE

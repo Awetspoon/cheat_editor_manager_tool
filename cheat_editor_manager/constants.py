@@ -1,11 +1,10 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict
 
 APP_NAME = "Cheat Editor Manager Tool"
 APP_TAGLINE = "Retro-ready cheat editing and export"
-APP_VERSION = "1.3.4"
+APP_VERSION = "1.3.5"
 
 APP_DIR = Path.home() / "CheatCreator"
 APP_DIR.mkdir(parents=True, exist_ok=True)
@@ -20,15 +19,21 @@ DEFAULT_HELP_LINKS = [
     {"name": "CMGSCCC (PS2 Cheat Codes)", "url": "https://www.cmgsccc.com"},
     {"name": "WiiRD Code Database", "url": "https://geckocodes.org"},
     {"name": "CheatSlips (Switch Cheats)", "url": "https://cheatslips.com"},
-    {"name": "GBAtemp ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â Cheats Forum", "url": "https://gbatemp.net/forums/nintendo-switch-cheats.289/"},
-    {"name": "RetroArch Docs ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â Cheats", "url": "https://docs.libretro.com/guides/cheat-codes/"},
-    {"name": "Dolphin Emulator ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â Guides", "url": "https://dolphin-emu.org/docs/guides/"},
-    {"name": "PCSX2 Wiki ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â Cheats", "url": "https://wiki.pcsx2.net/Category:Cheats"},
-    {"name": "PPSSPP ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â Cheats (Docs)", "url": "https://www.ppsspp.org/docs/reference/ini-file/#cheats"},
-    {"name": "DuckStation ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â Cheat Codes", "url": "https://www.duckstation.org/codes.html"},
-    {"name": "RPCS3 Wiki ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â Game Patches", "url": "https://wiki.rpcs3.net/index.php?title=Help:Game_Patches"},
-    {"name": "Xenia ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â Patches (GitHub)", "url": "https://github.com/xenia-project/xenia/wiki/Options#patches"},
-    {"name": "Cemu ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â Graphic Packs", "url": "https://cemu.info/#graphic-packs"},
+    {"name": "GBAtemp - Cheats Forum", "url": "https://gbatemp.net/forums/nintendo-switch-cheats.289/"},
+    {"name": "RetroArch Docs - Cheats", "url": "https://docs.libretro.com/guides/cheat-codes/"},
+    {"name": "Dolphin Emulator - Guides", "url": "https://dolphin-emu.org/docs/guides/"},
+    {"name": "PCSX2 Wiki - Cheats", "url": "https://wiki.pcsx2.net/Category:Cheats"},
+    {"name": "PPSSPP - Cheats (Docs)", "url": "https://www.ppsspp.org/docs/reference/ini-file/#cheats"},
+    {"name": "DuckStation - Cheat Codes", "url": "https://www.duckstation.org/codes.html"},
+    {"name": "RPCS3 Wiki - Game Patches", "url": "https://wiki.rpcs3.net/index.php?title=Help:Game_Patches"},
+    {"name": "Xenia - Patches (GitHub)", "url": "https://github.com/xenia-project/xenia/wiki/Options#patches"},
+    {"name": "Cemu - Graphic Packs", "url": "https://cemu.info/#graphic-packs"},
+    {"name": "GameFAQs - Cheats & Guides", "url": "https://gamefaqs.gamespot.com/"},
+    {"name": "Libretro Cheat Database (GitHub)", "url": "https://github.com/libretro/libretro-database/tree/master/cht"},
+    {"name": "Sharkive 3DS/Switch Cheat DB", "url": "https://github.com/FlagBrew/Sharkive"},
+    {"name": "VitaCheat Database (GitHub)", "url": "https://github.com/r0ah/vitacheat"},
+    {"name": "MAME Cheat Files (Pugsy)", "url": "https://www.mamecheat.co.uk/index.htm"},
+    {"name": "MAME Docs - Plugins", "url": "https://docs.mamedev.org/plugins/index.html"},
 ]
 
 DEFAULT_RETROARCH_CORES = [
@@ -55,7 +60,7 @@ DEFAULT_RETROARCH_CORES = [
     "Flycast",
 ]
 
-DEFAULT_PROFILES: Dict[str, dict] = {'Atmosphere (Switch) (CFW)': {'extensions': ['.txt'],
+DEFAULT_PROFILES: dict[str, dict] = {'Atmosphere (Switch) (CFW)': {'extensions': ['.txt'],
                                'subdir': 'atmosphere/contents/<TID>/cheats',
                                'filename_hint': '<BID>',
                                'notes': 'Atmosphere: SD:/atmosphere/contents/<TID>/cheats/<BID>.txt (BuildID changes '
@@ -268,16 +273,5 @@ DEFAULT_PREFS: dict = {
     "retroarch_core": DEFAULT_RETROARCH_CORES[0],
     "emulator_paths": {},
     "custom_profiles": {},
-    "profile_sort": "default",
-    "window_remember": True,
-    "window_geometry": "",
-    "window_asked_once": False,
     "branding_revision": 2,
 }
-
-
-
-
-
-
-

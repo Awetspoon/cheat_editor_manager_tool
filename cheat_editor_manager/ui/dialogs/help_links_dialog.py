@@ -1,54 +1,39 @@
 from __future__ import annotations
 
-import os
-import re
 import tkinter as tk
-import tkinter.font as tkfont
 import webbrowser
-from pathlib import Path
 from typing import Optional
 
-from tkinter import colorchooser, filedialog, messagebox, ttk
+from tkinter import messagebox, ttk
 
-from ...constants import APP_DIR, DEFAULT_RETROARCH_CORES
-from ...export_logic import build_export_plan as build_export_plan_for_state, clean_hex as _clean_hex, extract_switch_metadata, normalize_bids, normalize_profile_id, prepare_export_text, profile_id_label, split_bids, validate_export_inputs
-from ...resources import asset_path
-from ...storage import ensure_demo_templates, list_templates, load_prefs, profile_templates_dir, read_template, save_prefs, write_template
-from ...widgets import ToolTip, ask_text
+from ...services import help_link_service
+from ...storage import save_prefs
+from .dialog_utils import (
+    bind_dialog_shortcuts,
+    build_dialog_footer,
+    build_dialog_header,
+    build_dialog_list_with_sidebar,
+    configure_dialog_window,
+    pack_sidebar_button,
+)
+
+
+LINK_DIALOG_GEOMETRY = "500x265"
 
 
 def open_help_links(app):
     self = app
     win = tk.Toplevel(self.root)
-    win.title("Help Links")
-    win.geometry("760x520")
-    win.transient(self.root)
-    win.grab_set()
+    configure_dialog_window(self, win, "Help Links", "760x520")
 
-    ttk.Label(
+    build_dialog_header(
+        self,
         win,
-        text="Help links are quick shortcuts to cheat references and docs.",
-        wraplength=700,
-    ).pack(anchor="w", padx=12, pady=(12, 8))
+        "Help Links",
+        "Quick shortcuts to cheat references and documentation.",
+    )
 
-    body = ttk.Frame(win)
-    body.pack(fill="both", expand=True, padx=12, pady=(0, 12))
-    body.columnconfigure(0, weight=1)
-    body.rowconfigure(0, weight=1)
-
-    list_frame = ttk.Frame(body)
-    list_frame.grid(row=0, column=0, sticky="nsew")
-    list_frame.columnconfigure(0, weight=1)
-    list_frame.rowconfigure(0, weight=1)
-
-    lb = tk.Listbox(list_frame, activestyle="none", height=14)
-    vsb = ttk.Scrollbar(list_frame, orient="vertical", command=lb.yview)
-    lb.configure(yscrollcommand=vsb.set)
-    lb.grid(row=0, column=0, sticky="nsew")
-    vsb.grid(row=0, column=1, sticky="ns")
-
-    btns = ttk.Frame(body)
-    btns.grid(row=0, column=1, sticky="ns", padx=(10, 0))
+    lb, btns = build_dialog_list_with_sidebar(self, win)
 
     def selected_index() -> Optional[int]:
         sel = lb.curselection()
@@ -56,29 +41,45 @@ def open_help_links(app):
 
     def refresh(index: Optional[int] = None):
         lb.delete(0, tk.END)
-        for item in self.prefs.get("help_links", []):
-            lb.insert(tk.END, item.get("name") or item.get("url") or "Link")
+        for item in help_link_service.normalize_links(self.prefs.get("help_links", [])):
+            lb.insert(tk.END, help_link_service.display_name(item))
         if index is not None and 0 <= index < lb.size():
             lb.selection_set(index)
             lb.see(index)
 
     def prompt_link(existing: Optional[dict] = None) -> Optional[dict]:
         dlg = tk.Toplevel(win)
-        dlg.title("Edit Link" if existing else "Add Link")
-        dlg.transient(win)
-        dlg.grab_set()
-        dlg.resizable(False, False)
+        title = "Edit Link" if existing else "Add Link"
+        configure_dialog_window(
+            self,
+            dlg,
+            title,
+            LINK_DIALOG_GEOMETRY,
+            parent=win,
+            resizable=False,
+        )
+        build_dialog_header(
+            self,
+            dlg,
+            title,
+            "Save a clean name and web address for the Help Links list.",
+        )
         frm = ttk.Frame(dlg)
-        frm.pack(fill="both", expand=True, padx=12, pady=12)
+        frm.pack(fill="both", expand=True, padx=12, pady=(0, 10))
         frm.columnconfigure(1, weight=1)
 
         name_var = tk.StringVar(value=(existing or {}).get("name", ""))
         url_var = tk.StringVar(value=(existing or {}).get("url", ""))
 
-        ttk.Label(frm, text="Name:").grid(row=0, column=0, sticky="w", pady=(0, 6))
-        ttk.Entry(frm, textvariable=name_var, width=46).grid(row=0, column=1, sticky="ew", pady=(0, 6))
-        ttk.Label(frm, text="URL:").grid(row=1, column=0, sticky="w", pady=(0, 10))
-        ttk.Entry(frm, textvariable=url_var, width=46).grid(row=1, column=1, sticky="ew", pady=(0, 10))
+        ttk.Label(frm, text="Name").grid(row=0, column=0, sticky="w", pady=(0, 6))
+        name_entry = ttk.Entry(frm, textvariable=name_var, width=46)
+        name_entry.grid(
+            row=0, column=1, sticky="ew", pady=(0, 6)
+        )
+        ttk.Label(frm, text="URL").grid(row=1, column=0, sticky="w", pady=(0, 10))
+        ttk.Entry(frm, textvariable=url_var, width=46).grid(
+            row=1, column=1, sticky="ew", pady=(0, 10)
+        )
 
         out = {"value": None}
 
@@ -86,15 +87,22 @@ def open_help_links(app):
             name = name_var.get().strip()
             url = url_var.get().strip()
             if not name or not url:
-                messagebox.showerror("Help Links", "Both name and URL are required.", parent=dlg)
+                messagebox.showerror(
+                    "Help Links",
+                    "Both name and URL are required.",
+                    parent=dlg,
+                )
                 return
             out["value"] = {"name": name, "url": url}
             dlg.destroy()
 
-        row = ttk.Frame(frm)
-        row.grid(row=2, column=1, sticky="e")
-        ttk.Button(row, text="Cancel", command=dlg.destroy).pack(side="right", padx=(8, 0))
-        ttk.Button(row, text="Save", command=ok).pack(side="right")
+        footer = build_dialog_footer(self, dlg, pady=(0, 12))
+        ttk.Button(footer, text="Cancel", command=dlg.destroy).pack(
+            side="right", padx=(8, 12), pady=10
+        )
+        ttk.Button(footer, text="Save", command=ok).pack(side="right", pady=10)
+        bind_dialog_shortcuts(dlg, confirm=ok, cancel=dlg.destroy)
+        name_entry.focus_set()
         dlg.wait_window()
         return out["value"]
 
@@ -102,7 +110,10 @@ def open_help_links(app):
         idx = selected_index()
         if idx is None:
             return
-        url = (self.prefs.get("help_links") or [])[idx].get("url", "")
+        links = help_link_service.normalize_links(self.prefs.get("help_links"))
+        if idx >= len(links):
+            return
+        url = links[idx].get("url", "")
         if url:
             webbrowser.open(url)
 
@@ -110,8 +121,7 @@ def open_help_links(app):
         item = prompt_link()
         if not item:
             return
-        links = list(self.prefs.get("help_links") or [])
-        links.append(item)
+        links = help_link_service.add_link(self.prefs.get("help_links"), item)
         self.prefs["help_links"] = links
         save_prefs(self.prefs)
         refresh(len(links) - 1)
@@ -120,11 +130,13 @@ def open_help_links(app):
         idx = selected_index()
         if idx is None:
             return
-        links = list(self.prefs.get("help_links") or [])
+        links = help_link_service.normalize_links(self.prefs.get("help_links"))
+        if idx >= len(links):
+            return
         item = prompt_link(links[idx])
         if not item:
             return
-        links[idx] = item
+        links = help_link_service.replace_link(links, idx, item)
         self.prefs["help_links"] = links
         save_prefs(self.prefs)
         refresh(idx)
@@ -133,11 +145,13 @@ def open_help_links(app):
         idx = selected_index()
         if idx is None:
             return
-        links = list(self.prefs.get("help_links") or [])
-        name = links[idx].get("name") or links[idx].get("url") or "this link"
+        links = help_link_service.normalize_links(self.prefs.get("help_links"))
+        if idx >= len(links):
+            return
+        name = help_link_service.display_name(links[idx])
         if not messagebox.askyesno("Delete Link", f"Delete '{name}'?", parent=win):
             return
-        links.pop(idx)
+        links = help_link_service.delete_link(links, idx)
         self.prefs["help_links"] = links
         save_prefs(self.prefs)
         refresh(max(idx - 1, 0))
@@ -146,29 +160,36 @@ def open_help_links(app):
         idx = selected_index()
         if idx is None:
             return
-        links = list(self.prefs.get("help_links") or [])
-        new_idx = idx + delta
-        if new_idx < 0 or new_idx >= len(links):
+        links, new_idx = help_link_service.move_link(
+            self.prefs.get("help_links"), idx, delta
+        )
+        if new_idx == idx:
             return
-        links[idx], links[new_idx] = links[new_idx], links[idx]
         self.prefs["help_links"] = links
         save_prefs(self.prefs)
         refresh(new_idx)
 
     def reset_links():
-        if not messagebox.askyesno("Reset Links", "Restore the default help links?", parent=win):
+        if not messagebox.askyesno(
+            "Reset Links", "Restore the default help links?", parent=win
+        ):
             return
-        self.prefs["help_links"] = list(DEFAULT_PREFS.get("help_links", []))
+        self.prefs["help_links"] = help_link_service.default_links()
         save_prefs(self.prefs)
         refresh(0)
 
-    ttk.Button(btns, text="Open", command=open_link).pack(fill="x", pady=(0, 6))
-    ttk.Button(btns, text="Add...", command=add_link).pack(fill="x", pady=(0, 6))
-    ttk.Button(btns, text="Edit...", command=edit_link).pack(fill="x", pady=(0, 6))
-    ttk.Button(btns, text="Delete", command=delete_link).pack(fill="x", pady=(0, 6))
-    ttk.Button(btns, text="Move Up", command=lambda: move(-1)).pack(fill="x", pady=(18, 6))
-    ttk.Button(btns, text="Move Down", command=lambda: move(1)).pack(fill="x", pady=(0, 6))
-    ttk.Button(btns, text="Reset", command=reset_links).pack(fill="x", pady=(18, 6))
-    ttk.Button(btns, text="Close", command=win.destroy).pack(fill="x", pady=(18, 0))
+    pack_sidebar_button(btns, text="Open", command=open_link)
+    pack_sidebar_button(btns, text="Add...", command=add_link)
+    pack_sidebar_button(btns, text="Edit...", command=edit_link)
+    pack_sidebar_button(btns, text="Delete", command=delete_link)
+    pack_sidebar_button(
+        btns,
+        text="Move Up",
+        command=lambda: move(-1),
+        pady=(18, 6),
+    )
+    pack_sidebar_button(btns, text="Move Down", command=lambda: move(1))
+    pack_sidebar_button(btns, text="Reset", command=reset_links, pady=(18, 6))
+    pack_sidebar_button(btns, text="Close", command=win.destroy, pady=(18, 0))
 
     refresh(0)

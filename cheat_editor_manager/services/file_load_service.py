@@ -1,320 +1,293 @@
 from __future__ import annotations
 
-import os
 import re
 import tkinter as tk
-import tkinter.font as tkfont
-import webbrowser
 from pathlib import Path
 from typing import Optional
 
-from tkinter import colorchooser, filedialog, messagebox, ttk
+from tkinter import filedialog, messagebox
 
-from ..constants import APP_DIR, DEFAULT_RETROARCH_CORES
-from ..export_logic import build_export_plan as build_export_plan_for_state, clean_hex as _clean_hex, extract_switch_metadata, normalize_bids, normalize_profile_id, prepare_export_text, profile_id_label, split_bids, validate_export_inputs
-from ..resources import asset_path
-from ..storage import ensure_demo_templates, list_templates, load_prefs, profile_templates_dir, read_template, save_prefs, write_template
-from ..widgets import ToolTip, ask_text
+from ..export_logic import (
+    clean_hex as _clean_hex,
+    extract_switch_metadata,
+    normalize_bids,
+    normalize_profile_id,
+)
+from . import retroarch_core_service
 
 
-def load_file_into_app(app, filepath: Optional[str] = None):
-    self = app
+CHEAT_FILE_TYPES = [
+    ("Cheat files", "*.txt *.cht *.ini *.pnach *.yml *.yaml *.json *.xml *.dat"),
+    ("All files", "*.*"),
+]
+
+
+def load_file_into_app(app, filepath: Optional[str] = None) -> None:
     if not filepath:
-        filepath = filedialog.askopenfilename(
-            title="Load cheat file",
-            filetypes=[("Cheat files", "*.txt *.cht *.ini *.pnach *.yml *.yaml *.json *.xml *.dat"), ("All files", "*.*")]
-        )
+        filepath = filedialog.askopenfilename(title="Load cheat file", filetypes=CHEAT_FILE_TYPES)
     if not filepath:
         return
-    p = Path(filepath)
+
+    path = Path(filepath)
+    text = _read_cheat_file(path)
+    if text is None:
+        return
+
+    _fill_editor(app, path, text)
+    _detect_loaded_file(app, path, text)
+    app.refresh_profile_info()
+
+
+def _read_cheat_file(path: Path) -> Optional[str]:
     try:
-        text = p.read_text(encoding="utf-8", errors="replace")
+        return path.read_text(encoding="utf-8", errors="replace")
     except Exception:
         try:
-            text = p.read_text(encoding="latin-1", errors="replace")
-        except Exception as e:
-            messagebox.showerror("Load File", f"Could not read file:\n{p}\n\n{e}")
-            return
-
-    # Fill editor
-    self.editor.delete("1.0", tk.END)
-    self.editor.insert("1.0", text)
-    self.status.set(f"Loaded: {p.name}")
-
-    # Best-effort auto-detect (never destructive)
-    s = str(p).replace("\\", "/")
-    sl = s.lower()
-    fname = p.name.lower()
-
-    # 3DS Citra core: .../RetroArch/saves/Citra/cheats/<TitleID>.txt
-    if "/saves/citra/cheats/" in sl and p.suffix.lower() == ".txt":
-        try:
-            title_id = _clean_hex(p.stem)
-            if len(title_id) == 16:
-                self.tid_var.set(title_id)
-            citra_name = "Citra (3DS) - PC"
-            if citra_name in self.get_profile_values():
-                self.profile_var.set(citra_name)
-                try:
-                    self.profile_cb.set(citra_name)
-                except Exception:
-                    pass
-        except Exception:
-            pass
-
-    # 3DS Luma / CTRPF plugin layout: .../luma/plugins/<TitleID>/cheats.txt
-    if "/luma/plugins/" in sl and fname == "cheats.txt":
-        try:
-            tid_raw = sl.split("/luma/plugins/")[-1].split("/")[0]
-            title_id = _clean_hex(tid_raw)
-            if len(title_id) == 16:
-                self.tid_var.set(title_id)
-            luma_name = "Nintendo 3DS (CFW) (Luma)"
-            if luma_name in self.get_profile_values():
-                self.profile_var.set(luma_name)
-                try:
-                    self.profile_cb.set(luma_name)
-                except Exception:
-                    pass
-        except Exception:
-            pass
-
-    # RetroArch: .../cheats/<core>/<game>.cht  (core folder matters for auto-load)
-    if "/cheats/" in sl and p.suffix.lower() == ".cht" and "/duckstation/" not in sl:
-        try:
-            # Smarter detection:
-            # - Works for different RetroArch install roots (Android/PC)
-            # - Supports both /cheats/<game>.cht and /cheats/<core>/<game>.cht
-            # - Keeps user's core list unchanged (no auto-adding unknown cores)
-            parts_orig = s.replace("\\", "/").split("/")
-            parts_low = [part.lower() for part in parts_orig]
-
-            default_core_name = "Default (no subfolder)"
-            core_folder = ""
-            if "cheats" in parts_low:
-                i = len(parts_low) - 1 - parts_low[::-1].index("cheats")  # last occurrence
-                remaining = parts_orig[i + 1 :]
-                if len(remaining) >= 2:
-                    core_folder = (remaining[0] or "").strip()
-                elif len(remaining) == 1:
-                    core_folder = default_core_name
-
-            def _norm_core(x: str) -> str:
-                x = (x or "").strip().casefold()
-                # treat hyphen/underscore/multiple spaces as equivalent
-                x = re.sub(r"[-_]+", " ", x)
-                x = re.sub(r"\s+", " ", x).strip()
-                return x
-
-            if core_folder:
-                retro_name = "RetroArch (Multi-platform)"
-                if retro_name in self.get_profile_values():
-                    self.profile_var.set(retro_name)
-                    try:
-                        self.profile_cb.set(retro_name)
-                    except Exception:
-                        pass
-
-                cores = list(self.prefs.get("retroarch_cores", DEFAULT_RETROARCH_CORES) or [])
-                want = _norm_core(core_folder)
-
-                matched_name = ""
-                for c in cores:
-                    if _norm_core(c) == want:
-                        matched_name = c
-                        break
-
-                if matched_name:
-                    self.core_var.set(matched_name)
-                    self._show_core(True)
-                    self.status.set(f"Detected RetroArch core: {matched_name}")
-                elif want == _norm_core(default_core_name):
-                    self.core_var.set(default_core_name)
-                    self._show_core(True)
-                    self.status.set(f"Detected RetroArch core: {default_core_name}")
-                elif len(remaining) >= 2:
-                    # Don't change the user's list automatically (no surprise edits).
-                    self._show_core(True)
-                    self.status.set(f"Detected RetroArch core folder '{core_folder}', but it isn't in your core list.")
-        except Exception:
-            pass
+            return path.read_text(encoding="latin-1", errors="replace")
+        except Exception as exc:
+            messagebox.showerror("Load File", f"Could not read file:\n{path}\n\n{exc}")
+            return None
 
 
-    # Atmosphere/contents/<TID>/cheats/<BID>.txt
-    if "/atmosphere/contents/" in sl and "/cheats/" in sl:
-        try:
-            tid_raw = sl.split("/atmosphere/contents/")[-1].split("/")[0]
-            tid = _clean_hex(tid_raw)
-            if len(tid) == 16:
-                self.tid_var.set(tid)
-
-            # Atmosphere BuildID is commonly 32 hex, but some sources show 16.
-            bid = _clean_hex(p.stem)
-            if len(bid) in (16, 32):
-                self.bid_var.set(bid)
-
-            # Auto-switch profile to Atmosphere
-            atm_name = "Atmosphere (Switch) (CFW)"
-            if atm_name in self.get_profile_values():
-                self.profile_var.set(atm_name)
-                try:
-                    self.profile_cb.set(atm_name)
-                except Exception:
-                    pass
-        except Exception:
-            pass
+def _fill_editor(app, path: Path, text: str) -> None:
+    app.editor.delete("1.0", tk.END)
+    app.editor.insert("1.0", text)
+    app.status.set(f"Loaded: {path.name}")
 
 
-    # Switch emulator patterns: .../load/<TID>/cheats/<BID>.txt or Ryujinx mods/contents/<TID>/cheats/<BID>.txt
-    if "/load/" in sl and "/cheats/" in sl:
-        try:
-            tid_raw = sl.split("/load/")[-1].split("/")[0]
-            tid = _clean_hex(tid_raw)
-            if len(tid) == 16:
-                self.tid_var.set(tid)
+def _detect_loaded_file(app, path: Path, text: str) -> None:
+    path_text = str(path).replace("\\", "/")
+    lower_path = path_text.lower()
+    filename = path.name.lower()
 
-            bid = _clean_hex(p.stem)
-            if len(bid) in (16, 32):
-                self.bid_var.set(bid)
-
-            # Best-effort emulator auto-switch based on path segment.
-            if "/yuzu/" in sl:
-                name = "Yuzu (Switch) - PC"
-            elif "/sudachi/" in sl:
-                name = "Sudachi (Switch) - PC"
-            elif "/suyu/" in sl:
-                name = "Suyu (Switch) - PC"
-            else:
-                name = ""
-            if name and name in self.get_profile_values():
-                self.profile_var.set(name)
-                try:
-                    self.profile_cb.set(name)
-                except Exception:
-                    pass
-        except Exception:
-            pass
-    if "/mods/contents/" in sl and "/cheats/" in sl:
-        try:
-            tid_raw = sl.split("/mods/contents/")[-1].split("/")[0]
-            tid = _clean_hex(tid_raw)
-            if len(tid) == 16:
-                self.tid_var.set(tid)
-
-            bid = _clean_hex(p.stem)
-            if len(bid) in (16, 32):
-                self.bid_var.set(bid)
-
-            ry_name = "Ryujinx (Switch) - PC"
-            if ry_name in self.get_profile_values():
-                self.profile_var.set(ry_name)
-                try:
-                    self.profile_cb.set(ry_name)
-                except Exception:
-                    pass
-        except Exception:
-            pass
+    _detect_citra_layout(app, path, lower_path)
+    _detect_luma_layout(app, lower_path, filename)
+    _detect_retroarch_layout(app, path, path_text, lower_path)
+    _detect_atmosphere_layout(app, path, lower_path)
+    _detect_switch_emulator_layouts(app, path, lower_path)
+    _detect_switch_header_metadata(app, text)
+    _detect_generic_profile_layouts(app, path, lower_path, filename)
 
 
-    # Header fallback (CheatSlips / text headers): look for TID/BID inside the first lines.
-    # This is Switch-focused and helps first-time users who download cheats as plain text.
+def _profile_values(app) -> set[str]:
+    return set(app.get_profile_values())
+
+
+def _set_profile(app, profile_name: str, profile_values: Optional[set[str]] = None) -> bool:
+    available = profile_values if profile_values is not None else _profile_values(app)
+    if profile_name not in available:
+        return False
+
+    app.profile_var.set(profile_name)
     try:
-        metadata = extract_switch_metadata(text)
-        current_bids = normalize_bids(self.bid_var.get())
-        merged_bids = list(current_bids)
-
-        if len(_clean_hex(self.tid_var.get())) != 16 and metadata["tid"]:
-            self.tid_var.set(metadata["tid"])
-
-        for bid in metadata["bids"]:
-            if bid not in merged_bids:
-                merged_bids.append(bid)
-        if merged_bids:
-            self.bid_var.set(", ".join(merged_bids))
-
-        # Only prefer Atmosphere when the text actually looks Switch-specific.
-        if metadata["bids"] and len(_clean_hex(self.tid_var.get())) == 16:
-            atm_name = "Atmosphere (Switch) (CFW)"
-            if atm_name in self.get_profile_values():
-                self.profile_var.set(atm_name)
-                try:
-                    self.profile_cb.set(atm_name)
-                except Exception:
-                    pass
+        app.profile_cb.set(profile_name)
     except Exception:
         pass
+    return True
 
 
-    # Generic profile auto-detect (best-effort, non-destructive)
-    try:
-        sl2 = sl
-        profile_values = set(self.get_profile_values())
+def _set_title_id(app, raw_value: str) -> None:
+    title_id = _clean_hex(raw_value)
+    if len(title_id) == 16:
+        app.tid_var.set(title_id)
 
-        def _set_profile(profile_name: str) -> bool:
-            if profile_name not in profile_values:
-                return False
-            self.profile_var.set(profile_name)
-            try:
-                self.profile_cb.set(profile_name)
-            except Exception:
-                pass
-            return True
 
-        def _normalized_profile_id(profile_name: str, raw_value: str) -> str:
-            info = self.get_profile_info(profile_name)
-            normalized = normalize_profile_id(info, raw_value)
-            if not normalized:
-                return ""
-            id_regex = str(info.get("id_regex") or "").strip()
-            if id_regex and not re.fullmatch(id_regex, normalized):
-                return ""
-            return normalized
+def _set_build_id(app, raw_value: str) -> None:
+    build_id = _clean_hex(raw_value)
+    if len(build_id) in (16, 32):
+        app.bid_var.set(build_id)
 
-        def _set_profile_id_from_filename(profile_name: str, raw_value: str) -> None:
-            normalized = _normalized_profile_id(profile_name, raw_value)
-            if normalized:
-                self.tid_var.set(normalized)
 
-        # PCSX2 (.pnach)
-        if fname.endswith(".pnach") and _set_profile("PCSX2 (PS2) - PC"):
-            _set_profile_id_from_filename("PCSX2 (PS2) - PC", p.stem)
+def _detect_citra_layout(app, path: Path, lower_path: str) -> None:
+    if "/saves/citra/cheats/" not in lower_path or path.suffix.lower() != ".txt":
+        return
 
-        # Dolphin GameSettings (.ini)
-        if "/gamesettings/" in sl2 and fname.endswith(".ini") and _set_profile("Dolphin (GC/Wii) - PC"):
-            _set_profile_id_from_filename("Dolphin (GC/Wii) - PC", p.stem)
+    _set_title_id(app, path.stem)
+    _set_profile(app, "Citra (3DS) - PC")
 
-        # PPSSPP cheats (.ini) commonly in memstick/PSP/Cheats
-        if ("/psp/cheats/" in sl2 or "/memstick/psp/cheats/" in sl2) and fname.endswith(".ini") and _set_profile("PPSSPP (PSP) - PC"):
-            _set_profile_id_from_filename("PPSSPP (PSP) - PC", p.stem)
 
-        # Modded console layouts (best-effort path detection + ID from filename)
-        if ("/vitacheat/db/" in sl2 or "/psvita/vitacheat/db/" in sl2) and fname.endswith(".psv") and _set_profile("PS Vita (CFW) (taiHEN)"):
-            _set_profile_id_from_filename("PS Vita (CFW) (taiHEN)", p.stem)
+def _detect_luma_layout(app, lower_path: str, filename: str) -> None:
+    if "/luma/plugins/" not in lower_path or filename != "cheats.txt":
+        return
 
-        if ("/seplugins/cwcheat/" in sl2 or "/psp/seplugins/cwcheat/" in sl2) and fname.endswith(".ini") and _set_profile("PSP (CFW)"):
-            _set_profile_id_from_filename("PSP (CFW)", p.stem)
+    title_id = lower_path.split("/luma/plugins/")[-1].split("/")[0]
+    _set_title_id(app, title_id)
+    _set_profile(app, "Nintendo 3DS (CFW) (Luma)")
 
-        if (fname.endswith(".gct") and ("/wii/codes/" in sl2 or "/codes/" in sl2)) or (fname.endswith(".txt") and "/txtcodes/" in sl2):
-            if _set_profile("Wii (Homebrew)"):
-                _set_profile_id_from_filename("Wii (Homebrew)", p.stem)
 
-        if ("/wiiu/codes/" in sl2 or "/wii u/codes/" in sl2) and fname.endswith(".txt") and _set_profile("Wii U (CFW)"):
-            _set_profile_id_from_filename("Wii U (CFW)", p.stem)
+def _detect_retroarch_layout(app, path: Path, path_text: str, lower_path: str) -> None:
+    if "/cheats/" not in lower_path or path.suffix.lower() != ".cht" or "/duckstation/" in lower_path:
+        return
 
-        # DuckStation (.cht)
-        if "/duckstation/" in sl2 and "/cheats/" in sl2 and fname.endswith(".cht") and _set_profile("DuckStation (PS1) - PC"):
-            _set_profile_id_from_filename("DuckStation (PS1) - PC", p.stem)
+    parts = path_text.split("/")
+    lower_parts = [part.lower() for part in parts]
+    remaining: list[str] = []
+    default_core_name = retroarch_core_service.DEFAULT_CORE_NAME
+    core_folder = ""
 
-        # Xenia patches (.patch.toml)
-        if "/patches/" in sl2 and fname.endswith(".patch.toml") and _set_profile("Xenia (Xbox 360) - PC"):
-            _set_profile_id_from_filename("Xenia (Xbox 360) - PC", p.name[:-len(".patch.toml")])
+    if "cheats" in lower_parts:
+        index = len(lower_parts) - 1 - lower_parts[::-1].index("cheats")
+        remaining = parts[index + 1 :]
+        if len(remaining) >= 2:
+            core_folder = (remaining[0] or "").strip()
+        elif len(remaining) == 1:
+            core_folder = default_core_name
 
-        # RPCS3 patch.yml
-        if fname in ("patch.yml", "patch.yaml"):
-            _set_profile("RPCS3 (PS3) - PC")
-    except Exception:
-        pass
+    if not core_folder:
+        return
 
-    # Refresh helper UI state based on current selected profile
-    self.refresh_profile_info()
+    _set_profile(app, "RetroArch (Multi-platform)")
 
+    cores = retroarch_core_service.normalize_core_list(app.prefs.get("retroarch_cores"))
+    wanted_core = retroarch_core_service.normalize_core_name(core_folder)
+    matched_name = ""
+    for core in cores:
+        if retroarch_core_service.normalize_core_name(core) == wanted_core:
+            matched_name = core
+            break
+
+    if matched_name:
+        app.core_var.set(matched_name)
+        app._show_core(True)
+        app.status.set(f"Detected RetroArch core: {matched_name}")
+    elif wanted_core == retroarch_core_service.normalize_core_name(default_core_name):
+        app.core_var.set(default_core_name)
+        app._show_core(True)
+        app.status.set(f"Detected RetroArch core: {default_core_name}")
+    elif len(remaining) >= 2:
+        app._show_core(True)
+        app.status.set(f"Detected RetroArch core folder '{core_folder}', but it isn't in your core list.")
+
+
+def _detect_atmosphere_layout(app, path: Path, lower_path: str) -> None:
+    if "/atmosphere/contents/" not in lower_path or "/cheats/" not in lower_path:
+        return
+
+    title_id = lower_path.split("/atmosphere/contents/")[-1].split("/")[0]
+    _set_title_id(app, title_id)
+    _set_build_id(app, path.stem)
+    _set_profile(app, "Atmosphere (Switch) (CFW)")
+
+
+def _detect_switch_emulator_layouts(app, path: Path, lower_path: str) -> None:
+    if "/load/" in lower_path and "/cheats/" in lower_path:
+        title_id = lower_path.split("/load/")[-1].split("/")[0]
+        _set_title_id(app, title_id)
+        _set_build_id(app, path.stem)
+        _set_profile(app, _switch_load_profile_name(lower_path))
+
+    if "/mods/contents/" in lower_path and "/cheats/" in lower_path:
+        title_id = lower_path.split("/mods/contents/")[-1].split("/")[0]
+        _set_title_id(app, title_id)
+        _set_build_id(app, path.stem)
+        _set_profile(app, "Ryujinx (Switch) - PC")
+
+
+def _switch_load_profile_name(lower_path: str) -> str:
+    if "/yuzu/" in lower_path:
+        return "Yuzu (Switch) - PC"
+    if "/sudachi/" in lower_path:
+        return "Sudachi (Switch) - PC"
+    if "/suyu/" in lower_path:
+        return "Suyu (Switch) - PC"
+    return ""
+
+
+def _detect_switch_header_metadata(app, text: str) -> None:
+    metadata = extract_switch_metadata(text)
+    current_bids = normalize_bids(app.bid_var.get())
+    merged_bids = list(current_bids)
+
+    if len(_clean_hex(app.tid_var.get())) != 16 and metadata["tid"]:
+        app.tid_var.set(metadata["tid"])
+
+    for bid in metadata["bids"]:
+        if bid not in merged_bids:
+            merged_bids.append(bid)
+    if merged_bids:
+        app.bid_var.set(", ".join(merged_bids))
+
+    if metadata["bids"] and len(_clean_hex(app.tid_var.get())) == 16:
+        _set_profile(app, "Atmosphere (Switch) (CFW)")
+
+
+def _detect_generic_profile_layouts(app, path: Path, lower_path: str, filename: str) -> None:
+    profile_values = _profile_values(app)
+
+    def set_profile(profile_name: str) -> bool:
+        return _set_profile(app, profile_name, profile_values)
+
+    def set_profile_id_from_filename(profile_name: str, raw_value: str) -> None:
+        normalized = _normalized_profile_id(app, profile_name, raw_value)
+        if normalized:
+            app.tid_var.set(normalized)
+
+    if filename.endswith(".pnach") and set_profile("PCSX2 (PS2) - PC"):
+        set_profile_id_from_filename("PCSX2 (PS2) - PC", path.stem)
+
+    if "/gamesettings/" in lower_path and filename.endswith(".ini") and set_profile("Dolphin (GC/Wii) - PC"):
+        set_profile_id_from_filename("Dolphin (GC/Wii) - PC", path.stem)
+
+    if (
+        ("/psp/cheats/" in lower_path or "/memstick/psp/cheats/" in lower_path)
+        and filename.endswith(".ini")
+        and set_profile("PPSSPP (PSP) - PC")
+    ):
+        set_profile_id_from_filename("PPSSPP (PSP) - PC", path.stem)
+
+    if (
+        ("/vitacheat/db/" in lower_path or "/psvita/vitacheat/db/" in lower_path)
+        and filename.endswith(".psv")
+        and set_profile("PS Vita (CFW) (taiHEN)")
+    ):
+        set_profile_id_from_filename("PS Vita (CFW) (taiHEN)", path.stem)
+
+    if (
+        ("/seplugins/cwcheat/" in lower_path or "/psp/seplugins/cwcheat/" in lower_path)
+        and filename.endswith(".ini")
+        and set_profile("PSP (CFW)")
+    ):
+        set_profile_id_from_filename("PSP (CFW)", path.stem)
+
+    if _looks_like_wii_homebrew_code(lower_path, filename) and set_profile("Wii (Homebrew)"):
+        set_profile_id_from_filename("Wii (Homebrew)", path.stem)
+
+    if (
+        ("/wiiu/codes/" in lower_path or "/wii u/codes/" in lower_path)
+        and filename.endswith(".txt")
+        and set_profile("Wii U (CFW)")
+    ):
+        set_profile_id_from_filename("Wii U (CFW)", path.stem)
+
+    if (
+        "/duckstation/" in lower_path
+        and "/cheats/" in lower_path
+        and filename.endswith(".cht")
+        and set_profile("DuckStation (PS1) - PC")
+    ):
+        set_profile_id_from_filename("DuckStation (PS1) - PC", path.stem)
+
+    if "/patches/" in lower_path and filename.endswith(".patch.toml") and set_profile("Xenia (Xbox 360) - PC"):
+        set_profile_id_from_filename("Xenia (Xbox 360) - PC", path.name[: -len(".patch.toml")])
+
+    if filename in ("patch.yml", "patch.yaml"):
+        set_profile("RPCS3 (PS3) - PC")
+
+
+def _normalized_profile_id(app, profile_name: str, raw_value: str) -> str:
+    info = app.get_profile_info(profile_name)
+    normalized = normalize_profile_id(info, raw_value)
+    if not normalized:
+        return ""
+
+    id_regex = str(info.get("id_regex") or "").strip()
+    if id_regex and not re.fullmatch(id_regex, normalized):
+        return ""
+    return normalized
+
+
+def _looks_like_wii_homebrew_code(lower_path: str, filename: str) -> bool:
+    return (
+        filename.endswith(".gct")
+        and ("/wii/codes/" in lower_path or "/codes/" in lower_path)
+    ) or (filename.endswith(".txt") and "/txtcodes/" in lower_path)

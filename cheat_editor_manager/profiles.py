@@ -6,16 +6,48 @@ from .constants import DEFAULT_PROFILES
 from .export_logic import profile_id_label
 
 
+PROFILE_GROUP_CFW = "CFW / Homebrew"
+PROFILE_GROUP_PC = "PC / Emulator"
+PROFILE_GROUP_OTHER = "Custom / Other"
+PROFILE_GROUP_ORDER = {
+    PROFILE_GROUP_CFW: 0,
+    PROFILE_GROUP_PC: 1,
+    PROFILE_GROUP_OTHER: 2,
+}
+
+
 def get_profile_values(prefs: dict) -> list[str]:
     names = list(DEFAULT_PROFILES.keys())
     custom = list((prefs.get("custom_profiles") or {}).keys())
     for name in custom:
         if name not in names:
             names.append(name)
-    mode = (prefs.get("profile_sort") or "default").lower()
-    if mode in ("az", "a-z", "alphabetical", "alpha"):
-        return sorted(names, key=lambda s: s.casefold())
-    return names
+    return _grouped_profile_names(names)
+
+
+def profile_target_group(profile_name: str) -> str:
+    name = profile_name.casefold()
+    if "cfw" in name or "homebrew" in name or name.startswith("atmosphere"):
+        return PROFILE_GROUP_CFW
+    if " - pc" in name or "retroarch" in name or "emulator" in name:
+        return PROFILE_GROUP_PC
+    return PROFILE_GROUP_OTHER
+
+
+def _grouped_profile_names(names: list[str]) -> list[str]:
+    indexed_names = list(enumerate(names))
+    grouped = sorted(
+        indexed_names,
+        key=lambda item: (
+            PROFILE_GROUP_ORDER[profile_target_group(item[1])],
+            item[0],
+        ),
+    )
+    return [name for _index, name in grouped]
+
+
+def profile_group_label(profile_name: str) -> str:
+    return profile_target_group(profile_name)
 
 
 def get_profile_info(prefs: dict, profile_name: str) -> dict:

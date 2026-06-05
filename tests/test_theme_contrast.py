@@ -6,6 +6,7 @@ from cheat_editor_manager.constants import (
     DEFAULT_THEME_DARK,
     DEFAULT_THEME_LIGHT,
 )
+from cheat_editor_manager.services import theme_service
 
 
 class ThemeContrastTests(unittest.TestCase):
@@ -29,6 +30,21 @@ class ThemeContrastTests(unittest.TestCase):
         for accent in DEFAULT_BUTTON_COLORS.values():
             bg, fg = App._selection_palette(accent)
             self.assertContrastAtLeast(fg, bg, 4.5)
+
+    def test_effective_button_colors_normalizes_custom_values(self):
+        colors = theme_service.effective_button_colors(
+            {
+                "button_colors": {
+                    "primary": "not-a-color",
+                    "secondary": "#ABCDEF",
+                    "unused": "#000000",
+                }
+            }
+        )
+
+        self.assertEqual(colors["primary"], DEFAULT_BUTTON_COLORS["primary"].lower())
+        self.assertEqual(colors["secondary"], "#abcdef")
+        self.assertNotIn("unused", colors)
 
     def test_sanitize_theme_repairs_low_contrast_custom_values(self):
         broken = {key: "#f7f3ea" for key in DEFAULT_THEME_LIGHT}

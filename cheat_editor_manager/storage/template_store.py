@@ -1,22 +1,22 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import List
 
 from ..constants import DEFAULT_PROFILES, TEMPLATES_DIR
 
 
-def _safe_name(name: str) -> str:
-    return "".join(ch for ch in name if ch not in r'\/:*?"<>|').strip()
+def _safe_name(name: str, *, fallback: str) -> str:
+    safe_name = "".join(ch for ch in name if ch not in r'\/:*?"<>|').strip()
+    return safe_name or fallback
 
 
 def profile_templates_dir(profile: str) -> Path:
-    d = TEMPLATES_DIR / _safe_name(profile)
+    d = TEMPLATES_DIR / _safe_name(profile, fallback="Unknown Profile")
     d.mkdir(parents=True, exist_ok=True)
     return d
 
 
-def list_templates(profile: str) -> List[str]:
+def list_templates(profile: str) -> list[str]:
     d = profile_templates_dir(profile)
     names = [p.stem for p in sorted(d.glob("*.txt"))]
     if "Blank" not in names:
@@ -27,7 +27,10 @@ def list_templates(profile: str) -> List[str]:
 def read_template(profile: str, name: str) -> str:
     if name == "Blank":
         return ""
-    p = profile_templates_dir(profile) / f"{_safe_name(name)}.txt"
+    p = (
+        profile_templates_dir(profile)
+        / f"{_safe_name(name, fallback='Untitled')}.txt"
+    )
     if p.exists():
         return p.read_text(encoding="utf-8", errors="replace")
     return ""
@@ -36,7 +39,10 @@ def read_template(profile: str, name: str) -> str:
 def write_template(profile: str, name: str, content: str) -> None:
     if name == "Blank":
         return
-    p = profile_templates_dir(profile) / f"{_safe_name(name)}.txt"
+    p = (
+        profile_templates_dir(profile)
+        / f"{_safe_name(name, fallback='Untitled')}.txt"
+    )
     p.write_text(content, encoding="utf-8")
 
 

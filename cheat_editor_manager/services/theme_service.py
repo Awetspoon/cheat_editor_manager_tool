@@ -14,6 +14,21 @@ def effective_colors(prefs: dict) -> dict:
     return sanitize_theme_colors(base, defaults)
 
 
+def effective_button_colors(prefs: dict) -> dict:
+    button_colors = {
+        key: normalize_hex_color(value, DEFAULT_BUTTON_COLORS[key])
+        for key, value in DEFAULT_BUTTON_COLORS.items()
+    }
+    button_colors.update(
+        {
+            key: normalize_hex_color(value, DEFAULT_BUTTON_COLORS[key])
+            for key, value in (prefs.get("button_colors", {}) or {}).items()
+            if key in DEFAULT_BUTTON_COLORS
+        }
+    )
+    return button_colors
+
+
 def normalize_hex_color(value: str, fallback: str = "#000000") -> str:
     raw = (value or "").strip()
     if re.fullmatch(r"#[0-9a-fA-F]{6}", raw):
@@ -66,6 +81,14 @@ def selection_palette(accent: str, preferred_text: str = "#ffffff") -> tuple[str
     bg = normalize_hex_color(accent, DEFAULT_BUTTON_COLORS["primary"])
     fg = ensure_text_contrast(bg, preferred=preferred_text, minimum=4.5)
     return bg, fg
+
+
+def readable_text_color(
+    bg: str, *, light: str = "#fff8eb", dark: str = "#231b15"
+) -> str:
+    bg = normalize_hex_color(bg, "#ffffff")
+    preferred = dark if relative_luminance(bg) >= 0.58 else light
+    return ensure_text_contrast(bg, preferred=preferred, light=light, dark=dark)
 
 
 def button_palette(bg: str, surface_bg: str, preferred_text: str, *, minimum: float = 4.5, disabled_minimum: float = 3.0) -> dict:

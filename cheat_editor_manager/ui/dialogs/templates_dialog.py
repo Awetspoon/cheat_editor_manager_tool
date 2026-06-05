@@ -6,7 +6,7 @@ from typing import Optional
 
 from tkinter import messagebox, ttk
 
-from ...export_logic import profile_id_label
+from ...services.template_service import build_helper_snippet
 from ...storage import (
     ensure_demo_templates,
     list_templates,
@@ -15,7 +15,24 @@ from ...storage import (
     save_prefs,
     write_template,
 )
-from ...widgets import Scrollable, ask_text
+from ...ui.style import CONTROL_GAP, PANEL_GAP, PANEL_INNER_PAD_X
+from ...ui.widgets import (
+    AutoScrollbar,
+    ask_text,
+    configure_listbox_theme,
+    configure_text_theme,
+)
+from .dialog_utils import (
+    build_dialog_footer,
+    build_dialog_header,
+    build_dialog_scroll_body,
+    configure_dialog_window,
+)
+
+
+CONTENT_PAD = PANEL_INNER_PAD_X
+BUTTON_GAP = CONTROL_GAP
+
 
 def open_templates(app):
     self = app
@@ -25,39 +42,36 @@ def open_templates(app):
         return
 
     win = tk.Toplevel(self.root)
-    win.title(f"Templates - {prof}")
-    win.geometry("860x620")
-    win.transient(self.root)
-    win.grab_set()
+    configure_dialog_window(self, win, f"Templates - {prof}", "860x620")
 
-    sf = Scrollable(win)
-    sf.pack(fill="both", expand=True)
-    sf.set_canvas_bg(self.effective_colors()["bg"])
-
-    ttk.Label(sf.inner, text="Templates", font=("Segoe UI", 12, "bold")).pack(anchor="w", padx=12, pady=(12, 6))
-    ttk.Label(sf.inner, text=f"Profile: {prof}").pack(anchor="w", padx=12, pady=(0, 10))
+    sf = build_dialog_scroll_body(self, win)
+    build_dialog_header(self, sf.inner, "Templates", f"Profile: {prof}")
 
     body = ttk.Frame(sf.inner)
-    body.pack(fill="both", expand=True, padx=12, pady=(0, 10))
+    body.pack(fill="both", expand=True, padx=CONTENT_PAD, pady=(0, PANEL_GAP))
     body.columnconfigure(1, weight=1)
     body.rowconfigure(0, weight=1)
 
     list_frame = ttk.Frame(body)
     list_frame.grid(row=0, column=0, sticky="nsw")
     listbox = tk.Listbox(list_frame, height=14, width=34, activestyle="none")
+    configure_listbox_theme(listbox, self)
     listbox.pack(side="left", fill="y")
-    list_vsb = ttk.Scrollbar(list_frame, orient="vertical", command=listbox.yview)
+    list_vsb = AutoScrollbar(list_frame, orient="vertical", command=listbox.yview)
     listbox.configure(yscrollcommand=list_vsb.set)
     list_vsb.pack(side="left", fill="y")
 
     preview_frame = ttk.Frame(body)
-    preview_frame.grid(row=0, column=1, sticky="nsew", padx=(12, 0))
+    preview_frame.grid(row=0, column=1, sticky="nsew", padx=(CONTENT_PAD, 0))
     preview_frame.columnconfigure(0, weight=1)
     preview_frame.rowconfigure(1, weight=1)
-    ttk.Label(preview_frame, text="Template preview:").grid(row=0, column=0, sticky="w", pady=(0, 6))
+    ttk.Label(preview_frame, text="Template preview:").grid(
+        row=0, column=0, sticky="w", pady=(0, 6)
+    )
     preview = tk.Text(preview_frame, wrap="word", height=18)
+    configure_text_theme(preview, self, editor=True)
     preview.grid(row=1, column=0, sticky="nsew")
-    p_vsb = ttk.Scrollbar(preview_frame, orient="vertical", command=preview.yview)
+    p_vsb = AutoScrollbar(preview_frame, orient="vertical", command=preview.yview)
     preview.configure(yscrollcommand=p_vsb.set)
     p_vsb.grid(row=1, column=1, sticky="ns")
     preview.configure(state="disabled")
@@ -152,68 +166,129 @@ def open_templates(app):
         self.status.set("Templates reset.")
 
     def do_insert_helper():
-        info = self.get_profile_info(prof)
-        kind = info.get("kind", "generic")
-        if kind == "switch":
-            snippet = (
-                "# Switch helper\n"
-                "# TitleID stays the same.\n"
-                "# BuildID changes with updates.\n"
-                "# You can enter multiple BIDs separated by commas.\n"
-                "# Atmosphere path: atmosphere/contents/<TID>/cheats/<BID>.txt\n\n"
-            )
-        elif kind in {"titleid", "idfile"}:
-            snippet = (
-                f"# ID-based helper\n"
-                f"# Use the {profile_id_label(info)} this target expects.\n"
-                "# Quick Export builds the filename or plugin folder from that ID.\n"
-            )
-            if info.get("citra_enabled"):
-                snippet += "*citra_enabled\n\n"
-            else:
-                snippet += "\n"
-        elif kind == "retroarch":
-            snippet = (
-                "# RetroArch helper (multi-platform)\n"
-                "# Path: RetroArch/cheats/<Core Name>/<Game>.cht\n"
-                "# Pick your core in the Helper panel.\n\n"
-            )
-        else:
-            snippet = "# Helper snippet\n# Safe starting structure for this emulator.\n\n"
-        self.editor.insert(tk.INSERT, snippet)
+        self.editor.insert(tk.INSERT, build_helper_snippet(self.get_profile_info(prof)))
         win.destroy()
 
-    ttk.Separator(sf.inner).pack(fill="x", padx=12, pady=(0, 10))
-    br = ttk.Frame(sf.inner)
-    br.pack(fill="x", padx=12, pady=(0, 6))
-    ttk.Label(br, text="Apply template to editor:").pack(side="left")
-    ttk.Button(br, text="Insert", command=do_insert).pack(side="left", padx=(10, 0))
-    ttk.Button(br, text="Load & replace", command=do_load_replace).pack(side="left", padx=(8, 0))
-    ttk.Button(br, text="Close", command=win.destroy).pack(side="right")
+    _build_template_action_footer(
+        self,
+        sf.inner,
+        insert_template=do_insert,
+        load_replace=do_load_replace,
+        close=win.destroy,
+    )
     ttk.Label(
         sf.inner,
-        text="Insert keeps your existing text. Load & replace starts the editor from the template.",
-    ).pack(anchor="w", padx=12, pady=(0, 8))
+        text=(
+            "Insert keeps your existing text. "
+            "Load & replace starts the editor from the template."
+        ),
+    ).pack(anchor="w", padx=CONTENT_PAD, pady=(0, BUTTON_GAP))
 
     adv_var = tk.BooleanVar(value=False)
-    ttk.Checkbutton(sf.inner, text="Show advanced options", variable=adv_var).pack(anchor="w", padx=12, pady=(0, 6))
-    adv_panel = ttk.LabelFrame(sf.inner, text="Advanced (template management)")
-    adv_row = ttk.Frame(adv_panel)
-    adv_row.pack(fill="x", padx=10, pady=10)
-    ttk.Button(adv_row, text="Save editor as template", command=do_save_current).pack(side="left")
-    ttk.Button(adv_row, text="Set as default", command=do_set_default).pack(side="left", padx=(8, 0))
-    ttk.Button(adv_row, text="Open template folder", command=do_open_folder).pack(side="left", padx=(8, 0))
-    ttk.Button(adv_row, text="Reset templates (files)", style="Danger.TButton", command=do_reset_files).pack(side="left", padx=(8, 0))
-    ttk.Button(adv_row, text="Insert helper snippet", command=do_insert_helper).pack(side="left", padx=(8, 0))
-    ttk.Label(adv_panel, text="Advanced is optional. Most users only need Insert / Load.").pack(anchor="w", padx=10, pady=(0, 10))
+    adv_panel = _build_advanced_template_panel(
+        sf.inner,
+        adv_var,
+        save_current=do_save_current,
+        set_default=do_set_default,
+        open_folder=do_open_folder,
+        reset_files=do_reset_files,
+        insert_helper=do_insert_helper,
+    )
 
     def sync_adv(*_):
         if adv_var.get():
-            adv_panel.pack(fill="x", padx=12, pady=(0, 12))
+            adv_panel.pack(fill="x", padx=CONTENT_PAD, pady=(0, CONTENT_PAD))
         else:
             adv_panel.pack_forget()
 
     adv_var.trace_add("write", sync_adv)
     sync_adv()
     refresh()
+
+
+def _build_template_action_footer(
+    app,
+    parent,
+    *,
+    insert_template,
+    load_replace,
+    close,
+) -> None:
+    footer = build_dialog_footer(app, parent, pady=(0, BUTTON_GAP))
+    ttk.Label(footer, text="Apply template to editor:").pack(side="left")
+    ttk.Button(footer, text="Insert", command=insert_template).pack(
+        side="left", padx=(PANEL_GAP, 0), pady=PANEL_GAP
+    )
+    ttk.Button(footer, text="Load & replace", command=load_replace).pack(
+        side="left", padx=(BUTTON_GAP, 0), pady=PANEL_GAP
+    )
+    ttk.Button(footer, text="Close", command=close).pack(
+        side="right", padx=CONTENT_PAD, pady=PANEL_GAP
+    )
+
+
+def _build_advanced_template_panel(
+    parent,
+    advanced_visible: tk.BooleanVar,
+    *,
+    save_current,
+    set_default,
+    open_folder,
+    reset_files,
+    insert_helper,
+) -> ttk.LabelFrame:
+    ttk.Checkbutton(
+        parent,
+        text="Show advanced options",
+        variable=advanced_visible,
+    ).pack(anchor="w", padx=CONTENT_PAD, pady=(0, 6))
+
+    panel = ttk.LabelFrame(parent, text="Advanced (template management)")
+    for column in range(3):
+        panel.columnconfigure(column, weight=1, uniform="advanced_template_actions")
+    _grid_advanced_button(panel, "Save editor as template", save_current, 0, 0)
+    _grid_advanced_button(panel, "Set as default", set_default, 0, 1)
+    _grid_advanced_button(panel, "Open template folder", open_folder, 0, 2)
+    _grid_advanced_button(
+        panel,
+        "Reset templates",
+        reset_files,
+        1,
+        0,
+        style="Danger.TButton",
+    )
+    _grid_advanced_button(panel, "Insert helper snippet", insert_helper, 1, 1)
+    ttk.Label(
+        panel,
+        text="Advanced is optional. Most users only need Insert / Load.",
+    ).grid(
+        row=2,
+        column=0,
+        columnspan=3,
+        sticky="w",
+        padx=PANEL_GAP,
+        pady=(0, PANEL_GAP),
+    )
+    return panel
+
+
+def _grid_advanced_button(
+    parent,
+    text: str,
+    command,
+    row: int,
+    column: int,
+    *,
+    style: str | None = None,
+) -> None:
+    options = {"text": text, "command": command}
+    if style is not None:
+        options["style"] = style
+    ttk.Button(parent, **options).grid(
+        row=row,
+        column=column,
+        sticky="ew",
+        padx=(PANEL_GAP if column == 0 else BUTTON_GAP, PANEL_GAP),
+        pady=(PANEL_GAP if row == 0 else 0, BUTTON_GAP),
+    )
 

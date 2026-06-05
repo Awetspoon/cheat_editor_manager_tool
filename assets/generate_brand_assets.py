@@ -301,17 +301,30 @@ def main() -> None:
     for size in icon_sizes:
         save_png(ASSETS_DIR / f"icon-{size}.png", master.resize((size, size), Image.Resampling.LANCZOS))
 
+    save_png(ASSETS_DIR / "app-icon.png", master.resize((512, 512), Image.Resampling.LANCZOS))
     save_png(ASSETS_DIR / "icon-256.png", master.resize((256, 256), Image.Resampling.LANCZOS))
     save_png(ASSETS_DIR / "mark-48.png", master.resize((48, 48), Image.Resampling.LANCZOS))
-    save_png(ASSETS_DIR / "mark-96.png", master.resize((96, 96), Image.Resampling.LANCZOS))
+    mark_96 = master.resize((96, 96), Image.Resampling.LANCZOS)
+    save_png(ASSETS_DIR / "mark-96.png", mark_96)
+    save_png(ASSETS_DIR / "logomark.png", mark_96)
 
-    save_png(ASSETS_DIR / "wordmark-360.png", make_wordmark(master, (360, 96)))
-    save_png(ASSETS_DIR / "logo-header.png", make_wordmark(master, (920, 220)))
-    save_png(ASSETS_DIR / "logo-wide.png", make_wordmark(master, (1280, 320)))
+    wordmark_360 = make_wordmark(master, (360, 96))
+    save_png(ASSETS_DIR / "wordmark-360.png", wordmark_360)
+    save_png(ASSETS_DIR / "wordmark.png", wordmark_360)
+
+    logo_header = make_wordmark(master, (920, 220))
+    save_png(ASSETS_DIR / "logo-header.png", logo_header)
+    save_png(ASSETS_DIR / "secondary-logo.png", logo_header)
+
+    logo_wide = make_wordmark(master, (1280, 320))
+    save_png(ASSETS_DIR / "logo-wide.png", logo_wide)
+    save_png(ASSETS_DIR / "primary-logo.png", logo_wide)
     save_png(ASSETS_DIR / "logo-square.png", make_square_badge(master, 1024))
 
     save_png(ASSETS_DIR / "watermark-ui.png", make_wordmark(master, (560, 160), translucent=True))
-    save_png(ASSETS_DIR / "watermark.png", make_wordmark(master, (1400, 360), translucent=True))
+    watermark = make_wordmark(master, (1400, 360), translucent=True)
+    save_png(ASSETS_DIR / "watermark.png", watermark)
+    save_png(ASSETS_DIR / "watermark-brand.png", watermark)
 
     save_png(ASSETS_DIR / "splash-1366x768.png", make_splash(master, (1366, 768)))
     save_png(ASSETS_DIR / "splash-1920x1080.png", make_splash(master, (1920, 1080)))
@@ -325,20 +338,40 @@ def main() -> None:
 
     (ASSETS_DIR / "README.md").write_text(
         "# Brand Assets\n\n"
-        "Generated brand kit for Cheat Editor Manager Tool.\n\n"
-        "Run `python assets/generate_brand_assets.py` to regenerate everything.\n\n"
-        "Core runtime files used by the app:\n"
-        "- `app-icon.ico`\n"
-        "- `icon-256.png`\n"
-        "- `mark-48.png`\n"
-        "- `wordmark-360.png`\n\n"
-        "Additional brand files:\n"
+        "This folder contains runtime images and retained brand-source files for Cheat Editor Manager Tool.\n\n"
+        "## Runtime Assets Used By The App\n\n"
+        "- `app-icon.ico` - executable and Windows title-bar icon.\n"
+        "- `icon-256.png` - Tk window icon image.\n"
+        "- `app-icon.png` - fallback Tk window icon image.\n"
+        "- `mark-48.png` - compact header mark.\n\n"
+        "The runtime header intentionally uses `mark-48.png` plus code-native text.\n"
+        "Do not reintroduce `wordmark-360.png`, `logo-header.png`, or watermark\n"
+        "images into the top-left header.\n\n"
+        "## README Screenshot\n\n"
+        "- `app-fullscreen.png` - current full-app screenshot used by the project README.\n\n"
+        "## Retained Brand Source Files\n\n"
         "- `icon-master.png`\n"
-        "- `icon-16.png`, `icon-32.png`, `icon-48.png`, `icon-64.png`, `icon-96.png`, `icon-128.png`, `icon-256.png`, `icon-512.png`\n"
+        "- `icon-16.png`, `icon-32.png`, `icon-48.png`, `icon-64.png`, `icon-96.png`,\n"
+        "  `icon-128.png`, `icon-256.png`, `icon-512.png`\n"
         "- `mark-96.png`\n"
-        "- `logo-header.png`, `logo-wide.png`, `logo-square.png`\n"
-        "- `watermark-ui.png`, `watermark.png`\n"
-        "- `splash-1366x768.png`, `splash-1920x1080.png`, `social-card.png`\n",
+        "- `wordmark.png`, `wordmark-360.png`\n"
+        "- `primary-logo.png`, `logo-wide.png`\n"
+        "- `secondary-logo.png`, `logo-header.png`\n"
+        "- `logomark.png`\n"
+        "- `watermark-brand.png`, `watermark.png`, `watermark-ui.png`\n"
+        "- `logo-square.png`\n"
+        "- `splash-1366x768.png`, `splash-1920x1080.png`, `social-card.png`\n\n"
+        "Some files are intentional aliases with identical image content. The friendly\n"
+        "names (`primary-logo.png`, `secondary-logo.png`, `watermark-brand.png`,\n"
+        "`wordmark.png`, `logomark.png`) are kept because they are easier to understand\n"
+        "in documentation and future packaging work.\n\n"
+        "## Generated QA Images\n\n"
+        "Temporary screenshots and preview images belong in `build/`, not in this folder.\n\n"
+        "## Regenerate Assets\n\n"
+        "Run:\n\n"
+        "```bash\n"
+        "python assets/generate_brand_assets.py\n"
+        "```\n",
         encoding="utf-8",
     )
 
