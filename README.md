@@ -78,10 +78,11 @@ The target dropdown keeps one real list of profile names. It groups CFW/Homebrew
 
 ## Quick Start
 
-1. Select a target profile.
-2. Load or paste cheat text.
-3. Fill required ID fields (TID/BID or profile ID).
-4. Click **Quick Export** to write correctly structured output.
+1. Select the target profile, such as Atmosphere, Ryujinx, PCSX2, or RetroArch.
+2. Click **Load File** to open an existing cheat file, or paste cheat text into the editor.
+3. When the loaded file comes from a known layout, the app reads IDs such as Switch TID/BID, Citra title IDs, Dolphin game IDs, or PCSX2 CRCs where possible.
+4. If an ID cannot be detected automatically, fill the required TID/BID or profile ID fields manually.
+5. Click **Quick Export** to write the cheat to the correct folder and filename layout.
 
 ## Main UI Sections
 
@@ -227,4 +228,3 @@ Latest releases page:
 ## License
 
 MIT License. See [LICENSE](LICENSE).
-
