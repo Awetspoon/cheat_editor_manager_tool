@@ -7,15 +7,18 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
 class DocumentationTests(unittest.TestCase):
-    def test_readme_documents_current_ui_and_expansion_points(self):
+    def test_readme_documents_program_usage_and_expansion_points(self):
         readme = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
 
+        self.assertIn("## Download", readme)
+        self.assertIn("## What The Program Does", readme)
+        self.assertIn("## Quick Start", readme)
+        self.assertIn("## Supported Targets", readme)
         self.assertIn("## Main UI Sections", readme)
-        self.assertIn("## Purpose And Scope", readme)
-        self.assertIn("## Finished App Requirements", readme)
-        self.assertIn("## User Flow", readme)
-        self.assertIn("## Screen Map", readme)
-        self.assertIn("## Feature List", readme)
+        self.assertIn("## ID Detection", readme)
+        self.assertIn("## What The App Does Not Do", readme)
+        self.assertIn("## User Data", readme)
+        self.assertIn("## Project Notes For Developers", readme)
         self.assertIn("## Future Expansion Points", readme)
         self.assertIn("assets/README.md", readme)
 
