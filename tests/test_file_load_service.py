@@ -3,6 +3,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from cheat_editor_manager.constants import DEFAULT_PROFILES, DEFAULT_RETROARCH_CORES
+from cheat_editor_manager.profiles import PROFILE_GROUP_CFW, PROFILE_GROUP_PC
 from cheat_editor_manager.services.file_load_service import load_file_into_app
 
 
@@ -43,6 +44,7 @@ class FakeApp:
         self.tid_var = FakeVar()
         self.bid_var = FakeVar()
         self.profile_var = FakeVar()
+        self.profile_group_var = FakeVar()
         self.core_var = FakeVar()
         self.profile_cb = FakeCombobox()
         self.prefs = {"retroarch_cores": list(DEFAULT_RETROARCH_CORES)}
@@ -84,6 +86,7 @@ class FileLoadServiceTests(unittest.TestCase):
             self.assertEqual(app.tid_var.get(), "0100AABBCCDDEEFF")
             self.assertEqual(app.bid_var.get(), "AABBCCDDEEFF0011")
             self.assertEqual(app.profile_var.get(), "Atmosphere (Switch) (CFW)")
+            self.assertEqual(app.profile_group_var.get(), PROFILE_GROUP_CFW)
             self.assertEqual(app.profile_cb.value, "Atmosphere (Switch) (CFW)")
             self.assertEqual(app.refresh_count, 1)
 
@@ -100,6 +103,7 @@ class FileLoadServiceTests(unittest.TestCase):
             load_file_into_app(app, str(path))
 
             self.assertEqual(app.profile_var.get(), "RetroArch (Multi-platform)")
+            self.assertEqual(app.profile_group_var.get(), PROFILE_GROUP_PC)
             self.assertEqual(app.core_var.get(), "mGBA")
             self.assertTrue(app.core_visible)
             self.assertEqual(app.prefs["retroarch_cores"], original_cores)
@@ -118,6 +122,7 @@ class FileLoadServiceTests(unittest.TestCase):
 
             self.assertEqual(app.tid_var.get(), "000400000FF40A00")
             self.assertEqual(app.profile_var.get(), "Citra (3DS) - PC")
+            self.assertEqual(app.profile_group_var.get(), PROFILE_GROUP_PC)
             self.assertEqual(app.profile_cb.value, "Citra (3DS) - PC")
 
     def test_loads_pcsx2_pnach_and_normalizes_crc(self):
@@ -132,6 +137,7 @@ class FileLoadServiceTests(unittest.TestCase):
             load_file_into_app(app, str(path))
 
             self.assertEqual(app.profile_var.get(), "PCSX2 (PS2) - PC")
+            self.assertEqual(app.profile_group_var.get(), PROFILE_GROUP_PC)
             self.assertEqual(app.tid_var.get(), "1A2B3C4D")
 
 

@@ -45,7 +45,7 @@ def configure_dialog_window(
     palette = dialog_palette(app)
     window.title(title)
     if geometry:
-        window.geometry(geometry)
+        window.geometry(_parent_relative_geometry(parent or app.root, geometry))
     window.transient(parent or app.root)
     if modal:
         window.grab_set()
@@ -55,6 +55,28 @@ def configure_dialog_window(
         window.configure(bg=palette["bg"])
     except Exception:
         pass
+
+
+def _parent_relative_geometry(parent, geometry: str) -> str:
+    if "+" in geometry:
+        return geometry
+    try:
+        width, height = (int(part) for part in geometry.lower().split("x", 1))
+    except Exception:
+        return geometry
+
+    try:
+        parent.update_idletasks()
+        parent_width = max(width, parent.winfo_width())
+        parent_height = max(height, parent.winfo_height())
+        parent_x = parent.winfo_rootx()
+        parent_y = parent.winfo_rooty()
+    except Exception:
+        return geometry
+
+    x = parent_x + max(0, (parent_width - width) // 2)
+    y = parent_y + max(0, (parent_height - height) // 2)
+    return f"{width}x{height}+{x}+{y}"
 
 
 def bind_dialog_shortcuts(

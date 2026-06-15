@@ -9,6 +9,7 @@ class HelpLinkServiceTests(unittest.TestCase):
     def test_normalize_links_trims_values_and_drops_empty_entries(self):
         links = [
             {"name": " Docs ", "url": " https://example.com "},
+            {"name": "GameHacking", "url": "gamehacking.org"},
             {"name": "", "url": ""},
             {"url": "https://fallback.example"},
         ]
@@ -17,6 +18,7 @@ class HelpLinkServiceTests(unittest.TestCase):
             help_link_service.normalize_links(links),
             [
                 {"name": "Docs", "url": "https://example.com"},
+                {"name": "GameHacking", "url": "https://gamehacking.org"},
                 {"name": "", "url": "https://fallback.example"},
             ],
         )
@@ -49,17 +51,23 @@ class HelpLinkServiceTests(unittest.TestCase):
             deleted, [{"name": "Updated", "url": "https://updated.test"}]
         )
 
-    def test_move_link_returns_updated_list_and_selected_index(self):
+    def test_duplicate_url_index_finds_matching_saved_source(self):
         links = [
             {"name": "One", "url": "https://one.test"},
-            {"name": "Two", "url": "https://two.test"},
-            {"name": "Three", "url": "https://three.test"},
+            {"name": "Two", "url": "two.test"},
         ]
 
-        moved, selected = help_link_service.move_link(links, 1, -1)
-
-        self.assertEqual(selected, 0)
-        self.assertEqual([item["name"] for item in moved], ["Two", "One", "Three"])
+        self.assertEqual(
+            help_link_service.duplicate_url_index(links, "https://two.test"),
+            1,
+        )
+        self.assertIsNone(
+            help_link_service.duplicate_url_index(
+                links,
+                "https://two.test",
+                ignore_index=1,
+            )
+        )
 
     def test_default_links_returns_a_copy(self):
         first = help_link_service.default_links()

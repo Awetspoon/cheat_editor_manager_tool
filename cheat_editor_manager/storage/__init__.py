@@ -4,7 +4,13 @@ from pathlib import Path
 
 from ..constants import PREFS_FILE as DEFAULT_PREFS_FILE, TEMPLATES_DIR
 from . import prefs_store as _prefs_store
-from .template_store import ensure_demo_templates, list_templates, profile_templates_dir, read_template, write_template
+from .template_store import (
+    delete_template,
+    list_templates,
+    read_template,
+    templates_dir,
+    write_template,
+)
 
 PREFS_FILE = Path(DEFAULT_PREFS_FILE)
 
@@ -21,11 +27,11 @@ def save_prefs(prefs: dict) -> None:
 __all__ = [
     "PREFS_FILE",
     "TEMPLATES_DIR",
-    "ensure_demo_templates",
+    "delete_template",
     "list_templates",
     "load_prefs",
-    "profile_templates_dir",
     "read_template",
     "save_prefs",
+    "templates_dir",
     "write_template",
 ]

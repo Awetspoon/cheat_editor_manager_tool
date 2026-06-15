@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from typing import Any
+from urllib.parse import urlsplit
 
 from ..constants import DEFAULT_HELP_LINKS
 
@@ -14,8 +15,21 @@ def normalize_link(link: HelpLink | None) -> dict[str, str]:
     source = link or {}
     return {
         "name": str(source.get("name") or "").strip(),
-        "url": str(source.get("url") or "").strip(),
+        "url": normalize_url(str(source.get("url") or "")),
     }
+
+
+def normalize_url(url: str) -> str:
+    clean_url = str(url or "").strip()
+    if not clean_url:
+        return ""
+    parsed = urlsplit(clean_url)
+    if not parsed.scheme:
+        clean_url = f"https://{clean_url}"
+        parsed = urlsplit(clean_url)
+    if parsed.scheme not in {"http", "https"}:
+        return clean_url
+    return clean_url
 
 
 def normalize_links(links: Iterable[HelpLink] | None) -> list[dict[str, str]]:
@@ -31,6 +45,27 @@ def normalize_links(links: Iterable[HelpLink] | None) -> list[dict[str, str]]:
 def display_name(link: HelpLink) -> str:
     clean_link = normalize_link(link)
     return clean_link["name"] or clean_link["url"] or "Link"
+
+
+def display_url(link: HelpLink) -> str:
+    return normalize_link(link)["url"]
+
+
+def duplicate_url_index(
+    links: Iterable[HelpLink] | None,
+    url: str,
+    *,
+    ignore_index: int | None = None,
+) -> int | None:
+    target = normalize_url(url).casefold()
+    if not target:
+        return None
+    for index, link in enumerate(normalize_links(links)):
+        if ignore_index is not None and index == ignore_index:
+            continue
+        if link["url"].casefold() == target:
+            return index
+    return None
 
 
 def default_links() -> list[dict[str, str]]:
@@ -70,14 +105,3 @@ def delete_link(links: Iterable[HelpLink] | None, index: int) -> list[dict[str, 
     if 0 <= index < len(updated):
         updated.pop(index)
     return updated
-
-
-def move_link(
-    links: Iterable[HelpLink] | None, index: int, delta: int
-) -> tuple[list[dict[str, str]], int]:
-    updated = normalize_links(links)
-    new_index = index + delta
-    if 0 <= index < len(updated) and 0 <= new_index < len(updated):
-        updated[index], updated[new_index] = updated[new_index], updated[index]
-        return updated, new_index
-    return updated, index

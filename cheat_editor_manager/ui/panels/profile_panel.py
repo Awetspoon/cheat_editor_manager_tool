@@ -6,6 +6,12 @@ from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
 from ...constants import APP_DIR
+from ...profiles import (
+    PROFILE_GROUP_CFW,
+    get_profile_groups,
+    get_profiles_for_group,
+    profile_display_group,
+)
 from ...storage import save_prefs
 from ..style import (
     CONTROL_GAP,
@@ -28,6 +34,9 @@ BUTTON_GAP = CONTROL_GAP
 def build_profile_controls(app) -> None:
     values = app.get_profile_values()
     app.profile_var = tk.StringVar(value=values[0] if values else "")
+    app.profile_group_var = tk.StringVar(
+        value=profile_display_group(app.prefs, values[0]) if values else PROFILE_GROUP_CFW
+    )
     app.export_var = tk.StringVar(value=app.prefs.get("export_root", str(APP_DIR)))
     app.info_var = tk.StringVar(
         value=(
@@ -101,7 +110,7 @@ def _build_target_group(app, values: list[str]) -> None:
         column=0,
         padx=(PANEL_PAD_X, PANEL_PAD_X if sidebar_layout else GROUP_GAP),
         title="Target",
-        hint="Emulator / CFW",
+        hint="Choose group, then target",
     )
 
     app.profile_combo_wrap = tk.Frame(
@@ -109,16 +118,39 @@ def _build_target_group(app, values: list[str]) -> None:
     )
     app.profile_combo_wrap.grid(row=2, column=0, sticky="ew")
     app.profile_combo_wrap.columnconfigure(0, weight=1)
-    app.profile_cb = ttk.Combobox(
+
+    app.profile_group_label = tk.Label(
+        app.profile_combo_wrap, text="Group", anchor="w"
+    )
+    app.profile_group_label.grid(row=0, column=0, sticky="w")
+    app.profile_group_cb = ttk.Combobox(
         app.profile_combo_wrap,
-        textvariable=app.profile_var,
-        values=values,
+        textvariable=app.profile_group_var,
+        values=get_profile_groups(app.prefs),
         state="readonly",
         width=34,
         style="Profile.TCombobox",
     )
-    app.profile_cb.grid(row=0, column=0, sticky="nsew")
-    app.profile_cb.bind("<<ComboboxSelected>>", lambda _e: app.refresh_profile_info())
+    app.profile_group_cb.grid(row=1, column=0, sticky="ew", pady=(3, CONTROL_GAP))
+    app.profile_group_cb.bind(
+        "<<ComboboxSelected>>", lambda _e: _on_profile_group_selected(app)
+    )
+
+    app.profile_select_label = tk.Label(
+        app.profile_combo_wrap, text="Target profile", anchor="w"
+    )
+    app.profile_select_label.grid(row=2, column=0, sticky="w")
+    app.profile_cb = ttk.Combobox(
+        app.profile_combo_wrap,
+        textvariable=app.profile_var,
+        values=get_profiles_for_group(app.prefs, app.profile_group_var.get()),
+        state="readonly",
+        width=34,
+        style="Profile.TCombobox",
+    )
+    app.profile_cb.grid(row=3, column=0, sticky="ew", pady=(3, 0))
+    app.profile_cb.bind("<<ComboboxSelected>>", lambda _e: _on_profile_selected(app))
+    refresh_profiles_dropdown(app)
 
 
 def _build_export_group(app) -> None:
@@ -222,11 +254,54 @@ def _refresh_profile_control_wrap(app, event=None) -> None:
 def refresh_profiles_dropdown(app) -> None:
     try:
         values = app.get_profile_values()
-        app.profile_cb["values"] = values
-        if app.profile_var.get() not in values and values:
-            app.profile_var.set(values[0])
+        if not values:
+            app.profile_cb["values"] = []
+            return
+
+        selected_profile = app.profile_var.get()
+        if selected_profile not in values:
+            selected_profile = values[0]
+            app.profile_var.set(selected_profile)
+
+        selected_group = profile_display_group(app.prefs, selected_profile)
+        groups = get_profile_groups(app.prefs)
+        if hasattr(app, "profile_group_cb"):
+            app.profile_group_cb["values"] = groups
+        if hasattr(app, "profile_group_var") and (
+            app.profile_group_var.get() not in groups
+            or app.profile_group_var.get() != selected_group
+        ):
+            app.profile_group_var.set(selected_group)
+
+        group_profiles = get_profiles_for_group(app.prefs, selected_group)
+        app.profile_cb["values"] = group_profiles
+        if hasattr(app.profile_cb, "set"):
+            app.profile_cb.set(selected_profile)
     except Exception:
         pass
+
+
+def _on_profile_group_selected(app) -> None:
+    values = get_profiles_for_group(app.prefs, app.profile_group_var.get())
+    try:
+        app.profile_cb["values"] = values
+    except Exception:
+        pass
+    if values and app.profile_var.get() not in values:
+        app.profile_var.set(values[0])
+        try:
+            app.profile_cb.set(values[0])
+        except Exception:
+            pass
+    app.refresh_profile_info()
+
+
+def _on_profile_selected(app) -> None:
+    profile_name = app.profile_var.get()
+    group = profile_display_group(app.prefs, profile_name)
+    if hasattr(app, "profile_group_var") and app.profile_group_var.get() != group:
+        app.profile_group_var.set(group)
+    app.refresh_profile_info()
 
 
 def change_export_root(app) -> None:

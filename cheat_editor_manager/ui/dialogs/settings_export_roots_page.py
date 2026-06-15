@@ -287,20 +287,3 @@ def _set_effective_from_override(
 
 def _override_profile_names() -> list[str]:
     return [name for name in DEFAULT_PROFILES if name != ATMOSPHERE_PROFILE]
-
-
-def _profile_override(prefs: dict, profile_name: str) -> str:
-    return str((prefs.get("emulator_paths", {}) or {}).get(profile_name, ""))
-
-
-def _set_profile_override(prefs: dict, profile_name: str, raw_path: str) -> None:
-    value = str(raw_path or "").strip()
-    overrides = prefs.setdefault("emulator_paths", {})
-    if value:
-        overrides[profile_name] = value
-    else:
-        overrides.pop(profile_name, None)
-
-
-def _clear_profile_override(prefs: dict, profile_name: str) -> None:
-    prefs.setdefault("emulator_paths", {}).pop(profile_name, None)

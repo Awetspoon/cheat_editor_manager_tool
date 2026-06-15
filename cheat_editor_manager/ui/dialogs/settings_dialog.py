@@ -171,6 +171,19 @@ def _apply_settings_and_close(app, window: tk.Toplevel, shell: SettingsShell) ->
             controller.save_to_prefs()
     save_prefs(app.prefs)
     app.apply_theme()
-    app._sync_core_dropdown()
+    _call_app_callback(app, "_sync_core_dropdown")
+    _call_app_callback(app, "refresh_profiles_dropdown")
+    _call_app_callback(app, "refresh_profile_info")
+    _call_app_callback(app, "update_export_preview")
     app.status.set("Settings saved.")
     window.destroy()
+
+
+def _call_app_callback(app, name: str) -> None:
+    callback = getattr(app, name, None)
+    if not callable(callback):
+        return
+    try:
+        callback()
+    except Exception:
+        pass

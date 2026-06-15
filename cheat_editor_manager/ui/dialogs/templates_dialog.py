@@ -1,63 +1,76 @@
 from __future__ import annotations
 
-import os
 import tkinter as tk
 from typing import Optional
 
 from tkinter import messagebox, ttk
 
-from ...services.template_service import build_helper_snippet
-from ...storage import (
-    ensure_demo_templates,
-    list_templates,
-    profile_templates_dir,
-    read_template,
-    save_prefs,
-    write_template,
-)
+from ...storage import delete_template, list_templates, read_template, write_template
 from ...ui.style import CONTROL_GAP, PANEL_GAP, PANEL_INNER_PAD_X
 from ...ui.widgets import (
     AutoScrollbar,
-    ask_text,
     configure_listbox_theme,
     configure_text_theme,
 )
 from .dialog_utils import (
+    bind_dialog_shortcuts,
     build_dialog_footer,
     build_dialog_header,
-    build_dialog_scroll_body,
     configure_dialog_window,
 )
 
 
+TEMPLATES_DIALOG_GEOMETRY = "720x500"
+ADD_TEMPLATE_DIALOG_GEOMETRY = "680x460"
 CONTENT_PAD = PANEL_INNER_PAD_X
 BUTTON_GAP = CONTROL_GAP
+TEMPLATE_LIST_WIDTH = 26
+TEMPLATE_LIST_ROWS = 10
+TEMPLATE_PREVIEW_ROWS = 11
 
 
 def open_templates(app):
     self = app
-    prof = self.profile_var.get()
-    if not prof:
-        messagebox.showerror("Templates", "Select a profile before opening templates.")
-        return
 
     win = tk.Toplevel(self.root)
-    configure_dialog_window(self, win, f"Templates - {prof}", "860x620")
+    configure_dialog_window(self, win, "Templates", TEMPLATES_DIALOG_GEOMETRY)
+    try:
+        win.minsize(660, 430)
+    except Exception:
+        pass
 
-    sf = build_dialog_scroll_body(self, win)
-    build_dialog_header(self, sf.inner, "Templates", f"Profile: {prof}")
+    build_dialog_header(
+        self,
+        win,
+        "Templates",
+        "Reusable saved cheat text. Templates are not tied to the selected target.",
+    )
 
-    body = ttk.Frame(sf.inner)
-    body.pack(fill="both", expand=True, padx=CONTENT_PAD, pady=(0, PANEL_GAP))
+    content = ttk.Frame(win)
+    content.pack(fill="both", expand=True, padx=CONTENT_PAD, pady=(0, PANEL_GAP))
+    content.columnconfigure(0, weight=1)
+    content.rowconfigure(0, weight=1)
+
+    body = ttk.Frame(content)
+    body.grid(row=0, column=0, sticky="nsew")
     body.columnconfigure(1, weight=1)
     body.rowconfigure(0, weight=1)
 
     list_frame = ttk.Frame(body)
     list_frame.grid(row=0, column=0, sticky="nsw")
-    listbox = tk.Listbox(list_frame, height=14, width=34, activestyle="none")
+    ttk.Label(list_frame, text="Saved templates").pack(anchor="w", pady=(0, 6))
+    listbox_frame = ttk.Frame(list_frame)
+    listbox_frame.pack(fill="both", expand=True)
+    listbox = tk.Listbox(
+        listbox_frame,
+        height=TEMPLATE_LIST_ROWS,
+        width=TEMPLATE_LIST_WIDTH,
+        activestyle="none",
+        exportselection=False,
+    )
     configure_listbox_theme(listbox, self)
-    listbox.pack(side="left", fill="y")
-    list_vsb = AutoScrollbar(list_frame, orient="vertical", command=listbox.yview)
+    listbox.pack(side="left", fill="both", expand=True)
+    list_vsb = AutoScrollbar(listbox_frame, orient="vertical", command=listbox.yview)
     listbox.configure(yscrollcommand=list_vsb.set)
     list_vsb.pack(side="left", fill="y")
 
@@ -65,10 +78,10 @@ def open_templates(app):
     preview_frame.grid(row=0, column=1, sticky="nsew", padx=(CONTENT_PAD, 0))
     preview_frame.columnconfigure(0, weight=1)
     preview_frame.rowconfigure(1, weight=1)
-    ttk.Label(preview_frame, text="Template preview:").grid(
+    ttk.Label(preview_frame, text="Preview").grid(
         row=0, column=0, sticky="w", pady=(0, 6)
     )
-    preview = tk.Text(preview_frame, wrap="word", height=18)
+    preview = tk.Text(preview_frame, wrap="word", height=TEMPLATE_PREVIEW_ROWS)
     configure_text_theme(preview, self, editor=True)
     preview.grid(row=1, column=0, sticky="nsew")
     p_vsb = AutoScrollbar(preview_frame, orient="vertical", command=preview.yview)
@@ -77,6 +90,7 @@ def open_templates(app):
     preview.configure(state="disabled")
 
     selected = tk.StringVar(value="Blank")
+    delete_button: ttk.Button | None = None
 
     def selected_name() -> str:
         sel = listbox.curselection()
@@ -84,24 +98,30 @@ def open_templates(app):
             return listbox.get(sel[0])
         return selected.get() or "Blank"
 
+    def sync_delete_button() -> None:
+        if delete_button is None:
+            return
+        state = "disabled" if selected_name() == "Blank" else "normal"
+        delete_button.configure(state=state)
+
     def load_preview():
         name = selected_name()
         selected.set(name)
         preview.configure(state="normal")
         preview.delete("1.0", tk.END)
-        preview.insert("1.0", read_template(prof, name))
+        preview.insert("1.0", read_template(name))
         preview.configure(state="disabled")
+        sync_delete_button()
 
     def refresh(selected_name_override: Optional[str] = None):
-        names = list_templates(prof)
+        names = list_templates()
         listbox.delete(0, tk.END)
         for name in names:
             listbox.insert(tk.END, name)
 
-        default_name = (self.prefs.get("templates_default", {}) or {}).get(prof, "Blank")
-        target = selected_name_override or selected.get() or default_name or "Blank"
+        target = selected_name_override or selected.get() or "Blank"
         if target not in names:
-            target = default_name if default_name in names else names[0]
+            target = names[0]
         selected.set(target)
         idx = names.index(target)
         listbox.selection_clear(0, tk.END)
@@ -115,7 +135,8 @@ def open_templates(app):
     listbox.bind("<<ListboxSelect>>", on_select)
 
     def do_insert():
-        self.editor.insert(tk.INSERT, read_template(prof, selected_name()))
+        self.editor.insert(tk.INSERT, read_template(selected_name()))
+        self.status.set(f"Template inserted: {selected_name()}")
         win.destroy()
 
     def do_load_replace():
@@ -125,84 +146,54 @@ def open_templates(app):
             parent=win,
         ):
             self.editor.delete("1.0", tk.END)
-            self.editor.insert("1.0", read_template(prof, selected_name()))
+            self.editor.insert("1.0", read_template(selected_name()))
+            self.status.set(f"Template loaded: {selected_name()}")
             win.destroy()
 
-    def do_save_current():
-        name = ask_text(win, "Save template", "Template name:")
-        if not name:
+    def do_add_template():
+        result = _open_add_template_dialog(
+            self,
+            win,
+            initial_text=self.editor.get("1.0", "end-1c"),
+            template_names=list_templates(),
+        )
+        if result is None:
             return
-        write_template(prof, name, self.editor.get("1.0", tk.END))
+        name, content = result
+        write_template(name, content)
+        self.status.set(f"Template saved: {name}")
         refresh(name)
 
-    def do_set_default():
-        self.prefs.setdefault("templates_default", {})[prof] = selected_name()
-        save_prefs(self.prefs)
-        self.status.set(f"Default template set: {selected_name()}")
-        win.destroy()
-
-    def do_open_folder():
-        folder = profile_templates_dir(prof)
-        try:
-            os.startfile(folder)  # type: ignore[attr-defined]
-        except Exception:
-            messagebox.showinfo("Templates folder", str(folder), parent=win)
-
-    def do_reset_files():
+    def do_delete_template():
+        name = selected_name()
+        if name.strip().casefold() == "blank":
+            sync_delete_button()
+            return
         if not messagebox.askyesno(
-            "Reset templates",
-            "Delete saved template files for this profile and restore the demo template?",
+            "Delete template",
+            f"Delete the saved template '{name}'?",
             parent=win,
         ):
             return
-        folder = profile_templates_dir(prof)
-        for fp in folder.glob("*.txt"):
-            try:
-                fp.unlink()
-            except Exception:
-                pass
-        ensure_demo_templates()
+        if delete_template(name):
+            self.status.set(f"Template deleted: {name}")
+        else:
+            messagebox.showinfo(
+                "Templates",
+                f"The saved template '{name}' was not found.",
+                parent=win,
+            )
         refresh("Blank")
-        self.status.set("Templates reset.")
 
-    def do_insert_helper():
-        self.editor.insert(tk.INSERT, build_helper_snippet(self.get_profile_info(prof)))
-        win.destroy()
-
-    _build_template_action_footer(
+    delete_button = _build_template_action_footer(
         self,
-        sf.inner,
+        win,
         insert_template=do_insert,
         load_replace=do_load_replace,
+        add_template=do_add_template,
+        delete_template_action=do_delete_template,
         close=win.destroy,
     )
-    ttk.Label(
-        sf.inner,
-        text=(
-            "Insert keeps your existing text. "
-            "Load & replace starts the editor from the template."
-        ),
-    ).pack(anchor="w", padx=CONTENT_PAD, pady=(0, BUTTON_GAP))
-
-    adv_var = tk.BooleanVar(value=False)
-    adv_panel = _build_advanced_template_panel(
-        sf.inner,
-        adv_var,
-        save_current=do_save_current,
-        set_default=do_set_default,
-        open_folder=do_open_folder,
-        reset_files=do_reset_files,
-        insert_helper=do_insert_helper,
-    )
-
-    def sync_adv(*_):
-        if adv_var.get():
-            adv_panel.pack(fill="x", padx=CONTENT_PAD, pady=(0, CONTENT_PAD))
-        else:
-            adv_panel.pack_forget()
-
-    adv_var.trace_add("write", sync_adv)
-    sync_adv()
     refresh()
 
 
@@ -212,83 +203,143 @@ def _build_template_action_footer(
     *,
     insert_template,
     load_replace,
+    add_template,
+    delete_template_action,
     close,
-) -> None:
-    footer = build_dialog_footer(app, parent, pady=(0, BUTTON_GAP))
-    ttk.Label(footer, text="Apply template to editor:").pack(side="left")
-    ttk.Button(footer, text="Insert", command=insert_template).pack(
-        side="left", padx=(PANEL_GAP, 0), pady=PANEL_GAP
+) -> ttk.Button:
+    footer = build_dialog_footer(app, parent, pady=(0, CONTENT_PAD))
+    ttk.Button(footer, text="Use Template", command=insert_template).pack(
+        side="left", padx=(CONTENT_PAD, 0), pady=PANEL_GAP
     )
-    ttk.Button(footer, text="Load & replace", command=load_replace).pack(
+    ttk.Button(footer, text="Replace Editor", command=load_replace).pack(
         side="left", padx=(BUTTON_GAP, 0), pady=PANEL_GAP
     )
+    ttk.Button(footer, text="Add Template", command=add_template).pack(
+        side="left", padx=(BUTTON_GAP, 0), pady=PANEL_GAP
+    )
+    delete_button = ttk.Button(
+        footer,
+        text="Delete Template",
+        command=delete_template_action,
+        style="Danger.TButton",
+    )
+    delete_button.pack(side="left", padx=(BUTTON_GAP, 0), pady=PANEL_GAP)
     ttk.Button(footer, text="Close", command=close).pack(
         side="right", padx=CONTENT_PAD, pady=PANEL_GAP
     )
+    return delete_button
 
 
-def _build_advanced_template_panel(
-    parent,
-    advanced_visible: tk.BooleanVar,
+def _open_add_template_dialog(
+    app,
+    parent: tk.Toplevel,
     *,
-    save_current,
-    set_default,
-    open_folder,
-    reset_files,
-    insert_helper,
-) -> ttk.LabelFrame:
-    ttk.Checkbutton(
-        parent,
-        text="Show advanced options",
-        variable=advanced_visible,
-    ).pack(anchor="w", padx=CONTENT_PAD, pady=(0, 6))
-
-    panel = ttk.LabelFrame(parent, text="Advanced (template management)")
-    for column in range(3):
-        panel.columnconfigure(column, weight=1, uniform="advanced_template_actions")
-    _grid_advanced_button(panel, "Save editor as template", save_current, 0, 0)
-    _grid_advanced_button(panel, "Set as default", set_default, 0, 1)
-    _grid_advanced_button(panel, "Open template folder", open_folder, 0, 2)
-    _grid_advanced_button(
-        panel,
-        "Reset templates",
-        reset_files,
-        1,
-        0,
-        style="Danger.TButton",
+    initial_text: str,
+    template_names: list[str],
+) -> Optional[tuple[str, str]]:
+    window = tk.Toplevel(parent)
+    configure_dialog_window(
+        app,
+        window,
+        "Add Template",
+        ADD_TEMPLATE_DIALOG_GEOMETRY,
+        parent=parent,
     )
-    _grid_advanced_button(panel, "Insert helper snippet", insert_helper, 1, 1)
-    ttk.Label(
-        panel,
-        text="Advanced is optional. Most users only need Insert / Load.",
-    ).grid(
-        row=2,
-        column=0,
-        columnspan=3,
-        sticky="w",
-        padx=PANEL_GAP,
-        pady=(0, PANEL_GAP),
-    )
-    return panel
+    try:
+        window.minsize(620, 420)
+    except Exception:
+        pass
 
-
-def _grid_advanced_button(
-    parent,
-    text: str,
-    command,
-    row: int,
-    column: int,
-    *,
-    style: str | None = None,
-) -> None:
-    options = {"text": text, "command": command}
-    if style is not None:
-        options["style"] = style
-    ttk.Button(parent, **options).grid(
-        row=row,
-        column=column,
-        sticky="ew",
-        padx=(PANEL_GAP if column == 0 else BUTTON_GAP, PANEL_GAP),
-        pady=(PANEL_GAP if row == 0 else 0, BUTTON_GAP),
+    build_dialog_header(
+        app,
+        window,
+        "Add Template",
+        "Save reusable text that can be inserted into any target.",
     )
 
+    body = ttk.Frame(window)
+    body.pack(fill="both", expand=True, padx=CONTENT_PAD, pady=(0, PANEL_GAP))
+    body.columnconfigure(0, weight=1)
+    body.rowconfigure(3, weight=1)
+
+    ttk.Label(body, text="Template name").grid(row=0, column=0, sticky="w")
+    name_var = tk.StringVar()
+    name_entry = ttk.Entry(body, textvariable=name_var)
+    name_entry.grid(row=1, column=0, sticky="ew", pady=(CONTROL_GAP, PANEL_GAP))
+
+    ttk.Label(body, text="Template text").grid(row=2, column=0, sticky="w")
+    text_frame = ttk.Frame(body)
+    text_frame.grid(row=3, column=0, sticky="nsew", pady=(CONTROL_GAP, 0))
+    text_frame.columnconfigure(0, weight=1)
+    text_frame.rowconfigure(0, weight=1)
+
+    template_text = tk.Text(text_frame, wrap="word", height=12, undo=True)
+    configure_text_theme(template_text, app, editor=True)
+    template_text.grid(row=0, column=0, sticky="nsew")
+    text_vsb = AutoScrollbar(text_frame, orient="vertical", command=template_text.yview)
+    template_text.configure(yscrollcommand=text_vsb.set)
+    text_vsb.grid(row=0, column=1, sticky="ns")
+    template_text.insert("1.0", initial_text)
+
+    existing_by_case = {
+        item.strip().casefold(): item
+        for item in template_names
+        if item and item.strip().casefold() != "blank"
+    }
+    output: dict[str, Optional[tuple[str, str]]] = {"value": None}
+
+    def save() -> None:
+        name = name_var.get().strip()
+        if not name:
+            messagebox.showerror(
+                "Templates",
+                "Enter a template name before saving.",
+                parent=window,
+            )
+            name_entry.focus_set()
+            return
+        if name.casefold() == "blank":
+            messagebox.showerror(
+                "Templates",
+                "Blank is built in. Please choose a different template name.",
+                parent=window,
+            )
+            name_entry.focus_set()
+            name_entry.selection_range(0, tk.END)
+            return
+
+        existing = existing_by_case.get(name.casefold())
+        if existing and not messagebox.askyesno(
+            "Replace template",
+            f"Replace the saved template '{existing}'?",
+            parent=window,
+        ):
+            return
+
+        output["value"] = (
+            existing or name,
+            template_text.get("1.0", "end-1c"),
+        )
+        window.destroy()
+
+    def cancel() -> None:
+        output["value"] = None
+        window.destroy()
+
+    footer = build_dialog_footer(app, window, pady=(0, CONTENT_PAD))
+    ttk.Button(footer, text="Cancel", command=cancel).pack(
+        side="right",
+        padx=(BUTTON_GAP, CONTENT_PAD),
+        pady=PANEL_GAP,
+    )
+    ttk.Button(footer, text="Save Template", command=save).pack(
+        side="right",
+        pady=PANEL_GAP,
+    )
+
+    bind_dialog_shortcuts(window, cancel=cancel)
+    window.bind("<Control-s>", lambda _event: save(), add="+")
+    window.bind("<Control-S>", lambda _event: save(), add="+")
+    name_entry.focus_set()
+    window.wait_window()
+    return output["value"]

@@ -4,9 +4,7 @@ include requirements.txt
 include cheat_editor_manager_tool.py
 include cheat_editor_manager_tool.spec
 recursive-include assets *
-recursive-include docs *
 recursive-include hooks *.py
-recursive-include scripts *.py
 recursive-include vendor/tcl *
 prune build
 prune dist

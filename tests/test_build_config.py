@@ -19,7 +19,8 @@ class BuildConfigTests(unittest.TestCase):
         self.assertIn("recursive-include assets *", manifest)
         self.assertIn("recursive-include vendor/tcl *", manifest)
         self.assertIn("recursive-include hooks *.py", manifest)
-        self.assertIn("recursive-include scripts *.py", manifest)
+        self.assertNotIn("recursive-include docs", manifest)
+        self.assertNotIn("recursive-include scripts", manifest)
 
     def test_gitignore_excludes_generated_build_outputs(self):
         gitignore = (ROOT / ".gitignore").read_text(encoding="utf-8")

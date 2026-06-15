@@ -20,6 +20,14 @@ class AppSmokeTests(unittest.TestCase):
         self.assertGreater(App._contrast_ratio("#ffffff", "#000000"), 10)
         self.assertEqual(theme_service.normalize_hex_color("#ABCDEF"), "#abcdef")
 
+    def test_startup_window_uses_standard_non_fullscreen_size(self):
+        self.assertEqual((App.DEFAULT_WINDOW_WIDTH, App.DEFAULT_WINDOW_HEIGHT), (1180, 720))
+        self.assertEqual(App._fit_startup_size(1180, 720, 1920, 1080), (1180, 720))
+        self.assertEqual(App._fit_startup_size(1180, 720, 1366, 768), (1180, 688))
+        fitted_width, fitted_height = App._fit_startup_size(1180, 720, 1024, 600)
+        self.assertLessEqual(fitted_width, 1024)
+        self.assertLessEqual(fitted_height, 600)
+
     def test_direct_script_entrypoint_starts_in_smoke_mode(self):
         self._run_smoke_entrypoint("cheat_editor_manager_tool.py")
 

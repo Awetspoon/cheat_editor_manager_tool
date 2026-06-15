@@ -7,13 +7,13 @@ from tkinter import messagebox
 
 from ...services import retroarch_core_service
 from ...storage import save_prefs
-from ...ui.widgets import ask_text
 from .dialog_utils import (
     build_dialog_header,
     build_dialog_list_with_sidebar,
     configure_dialog_window,
     pack_sidebar_button,
 )
+from .text_prompt_dialog import ask_text_dialog
 
 
 def manage_retroarch_cores(app):
@@ -60,7 +60,7 @@ def manage_retroarch_cores(app):
         self.refresh_profile_info()
 
     def add():
-        name = ask_text(win, "Add core", "Core name (folder name):")
+        name = ask_text_dialog(self, win, "Add Core", "Core name (folder name):")
         if not name:
             return
         retroarch_core_service.add_core(self.prefs, name)
@@ -77,7 +77,13 @@ def manage_retroarch_cores(app):
                 parent=win,
             )
             return
-        name = ask_text(win, "Edit core", f"New name (current: {current}):")
+        name = ask_text_dialog(
+            self,
+            win,
+            "Edit Core",
+            f"New name (current: {current}):",
+            initial_value=current,
+        )
         if not name:
             return
         retroarch_core_service.rename_core(self.prefs, current, name)

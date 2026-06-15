@@ -13,6 +13,7 @@ from ..export_logic import (
     normalize_bids,
     normalize_profile_id,
 )
+from ..profiles import profile_display_group
 from . import retroarch_core_service
 
 
@@ -79,6 +80,14 @@ def _set_profile(app, profile_name: str, profile_values: Optional[set[str]] = No
         return False
 
     app.profile_var.set(profile_name)
+    if hasattr(app, "profile_group_var"):
+        try:
+            app.profile_group_var.set(profile_display_group(app.prefs, profile_name))
+        except Exception:
+            pass
+    refresh_dropdown = getattr(app, "refresh_profiles_dropdown", None)
+    if callable(refresh_dropdown):
+        refresh_dropdown()
     try:
         app.profile_cb.set(profile_name)
     except Exception:

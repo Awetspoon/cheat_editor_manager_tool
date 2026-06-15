@@ -4,7 +4,7 @@ from pathlib import Path
 
 APP_NAME = "Cheat Editor Manager Tool"
 APP_TAGLINE = "Retro-ready cheat editing and export"
-APP_VERSION = "1.3.5"
+APP_VERSION = "1.3.6"
 
 APP_DIR = Path.home() / "CheatCreator"
 APP_DIR.mkdir(parents=True, exist_ok=True)
@@ -268,7 +268,6 @@ DEFAULT_PREFS: dict = {
     "custom_theme_enabled": False,
     "custom_theme": dict(DEFAULT_THEME_DARK),
     "button_colors": dict(DEFAULT_BUTTON_COLORS),
-    "templates_default": {},
     "retroarch_cores": list(DEFAULT_RETROARCH_CORES),
     "retroarch_core": DEFAULT_RETROARCH_CORES[0],
     "emulator_paths": {},

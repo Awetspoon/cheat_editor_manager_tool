@@ -11,6 +11,11 @@ class DocumentationTests(unittest.TestCase):
         readme = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
 
         self.assertIn("## Main UI Sections", readme)
+        self.assertIn("## Purpose And Scope", readme)
+        self.assertIn("## Finished App Requirements", readme)
+        self.assertIn("## User Flow", readme)
+        self.assertIn("## Screen Map", readme)
+        self.assertIn("## Feature List", readme)
         self.assertIn("## Future Expansion Points", readme)
         self.assertIn("assets/README.md", readme)
 
@@ -24,18 +29,15 @@ class DocumentationTests(unittest.TestCase):
             "CLEANUP_PHASE_LOG.md",
             "scripts/check_dev_environment.py",
         ):
-            self.assertNotIn(removed_reference, readme)
+            with self.subTest(removed_reference=removed_reference):
+                self.assertNotIn(removed_reference, readme)
 
     def test_main_documentation_links_point_to_existing_files(self):
         readme = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
-        links = re.findall(r"\[[^\]]+\]\(([^)]+)\)", readme)
+        linked_paths = re.findall(r"\[[^\]]+\]\((?!https?://|#)([^)]+)\)", readme)
 
-        for target in links:
-            if target.startswith(("http://", "https://", "#")):
+        for relative_path in linked_paths:
+            if relative_path.startswith("mailto:"):
                 continue
-            with self.subTest(target=target):
-                self.assertTrue((PROJECT_ROOT / target).exists())
-
-
-if __name__ == "__main__":
-    unittest.main()
+            with self.subTest(relative_path=relative_path):
+                self.assertTrue((PROJECT_ROOT / relative_path).exists())

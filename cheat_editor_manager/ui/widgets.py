@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import tkinter as tk
 from tkinter import ttk
-from typing import Optional
 
 from ..services import theme_service
 
@@ -225,44 +224,18 @@ class Scrollable(ttk.Frame):
         self._update_scrollbars()
 
     def _on_canvas_configure(self, e=None):
-        # Match inner width and minimum height to the canvas so content reflows.
+        # Fill the viewport when content is smaller, but preserve genuine overflow
+        # so the auto-hiding scrollbars can appear when they are actually needed.
         try:
             w = max(1, self.canvas.winfo_width() if e is None else e.width)
             h = max(1, self.canvas.winfo_height() if e is None else e.height)
+            requested_w = max(1, self.inner.winfo_reqwidth())
             requested_h = max(1, self.inner.winfo_reqheight())
-            self.canvas.itemconfigure(self.inner_id, width=w, height=max(h, requested_h))
+            self.canvas.itemconfigure(
+                self.inner_id,
+                width=max(w, requested_w),
+                height=max(h, requested_h),
+            )
         except Exception:
             pass
         self._update_scrollbars()
-
-def ask_text(parent, title: str, label: str) -> Optional[str]:
-    win = tk.Toplevel(parent)
-    win.title(title)
-    win.transient(parent)
-    win.grab_set()
-    win.resizable(False, False)
-    try:
-        win.configure(bg=parent.winfo_toplevel().cget("bg"))
-    except Exception:
-        pass
-
-    frame = ttk.Frame(win)
-    frame.pack(fill="both", expand=True, padx=12, pady=12)
-
-    ttk.Label(frame, text=label).pack(anchor="w", pady=(0, 6))
-    var = tk.StringVar()
-    ent = ttk.Entry(frame, textvariable=var, width=48)
-    ent.pack(fill="x", pady=(0, 10))
-    ent.focus_set()
-    out = {"v": None}
-
-    def ok():
-        out["v"] = var.get().strip()
-        win.destroy()
-
-    row = ttk.Frame(frame)
-    row.pack(fill="x")
-    ttk.Button(row, text="OK", command=ok).pack(side="left")
-    ttk.Button(row, text="Cancel", command=win.destroy).pack(side="left", padx=(8, 0))
-    win.wait_window()
-    return out["v"]

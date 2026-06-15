@@ -5,8 +5,11 @@ from cheat_editor_manager.profiles import (
     PROFILE_GROUP_CFW,
     PROFILE_GROUP_OTHER,
     PROFILE_GROUP_PC,
+    get_profile_groups,
+    get_profiles_for_group,
     get_profile_info,
     get_profile_values,
+    profile_display_group,
     profile_target_group,
     profile_template_path,
 )
@@ -33,6 +36,36 @@ class ProfileHelperTests(unittest.TestCase):
         )
         self.assertEqual(profile_target_group("PCSX2 (PS2) - PC"), PROFILE_GROUP_PC)
         self.assertEqual(profile_target_group("My Custom Target"), PROFILE_GROUP_OTHER)
+
+    def test_profile_groups_feed_two_step_target_selector(self):
+        prefs = {
+            **DEFAULT_PREFS,
+            "custom_profiles": {
+                "MAME Emulator": {"subdir": "MAME", "extensions": [".xml"]}
+            },
+        }
+
+        self.assertEqual(
+            get_profile_groups(prefs),
+            [PROFILE_GROUP_CFW, PROFILE_GROUP_PC, PROFILE_GROUP_OTHER],
+        )
+        self.assertIn(
+            "Atmosphere (Switch) (CFW)",
+            get_profiles_for_group(prefs, PROFILE_GROUP_CFW),
+        )
+        self.assertIn("PCSX2 (PS2) - PC", get_profiles_for_group(prefs, PROFILE_GROUP_PC))
+        self.assertEqual(
+            get_profiles_for_group(prefs, PROFILE_GROUP_OTHER),
+            ["MAME Emulator"],
+        )
+        self.assertEqual(
+            profile_display_group(prefs, "MAME Emulator"),
+            PROFILE_GROUP_OTHER,
+        )
+        self.assertNotIn(
+            "MAME Emulator",
+            get_profiles_for_group(prefs, PROFILE_GROUP_PC),
+        )
 
     def test_default_help_link_names_are_clean_text(self):
         names = " ".join(item["name"] for item in DEFAULT_HELP_LINKS)

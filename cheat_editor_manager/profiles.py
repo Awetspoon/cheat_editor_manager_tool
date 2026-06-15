@@ -8,7 +8,7 @@ from .export_logic import profile_id_label
 
 PROFILE_GROUP_CFW = "CFW / Homebrew"
 PROFILE_GROUP_PC = "PC / Emulator"
-PROFILE_GROUP_OTHER = "Custom / Other"
+PROFILE_GROUP_OTHER = "Custom Emulators"
 PROFILE_GROUP_ORDER = {
     PROFILE_GROUP_CFW: 0,
     PROFILE_GROUP_PC: 1,
@@ -22,7 +22,29 @@ def get_profile_values(prefs: dict) -> list[str]:
     for name in custom:
         if name not in names:
             names.append(name)
-    return _grouped_profile_names(names)
+    return _grouped_profile_names(names, _custom_profile_names(prefs))
+
+
+def get_profile_groups(prefs: dict) -> list[str]:
+    groups = {
+        profile_display_group(prefs, profile_name)
+        for profile_name in get_profile_values(prefs)
+    }
+    return sorted(groups, key=lambda group: PROFILE_GROUP_ORDER.get(group, 99))
+
+
+def get_profiles_for_group(prefs: dict, group_label: str) -> list[str]:
+    return [
+        profile_name
+        for profile_name in get_profile_values(prefs)
+        if profile_display_group(prefs, profile_name) == group_label
+    ]
+
+
+def profile_display_group(prefs: dict, profile_name: str) -> str:
+    if profile_name in _custom_profile_names(prefs):
+        return PROFILE_GROUP_OTHER
+    return profile_target_group(profile_name)
 
 
 def profile_target_group(profile_name: str) -> str:
@@ -34,20 +56,32 @@ def profile_target_group(profile_name: str) -> str:
     return PROFILE_GROUP_OTHER
 
 
-def _grouped_profile_names(names: list[str]) -> list[str]:
+def _grouped_profile_names(names: list[str], custom_names: set[str] | None = None) -> list[str]:
+    custom_names = custom_names or set()
     indexed_names = list(enumerate(names))
     grouped = sorted(
         indexed_names,
         key=lambda item: (
-            PROFILE_GROUP_ORDER[profile_target_group(item[1])],
+            PROFILE_GROUP_ORDER[
+                PROFILE_GROUP_OTHER
+                if item[1] in custom_names
+                else profile_target_group(item[1])
+            ],
             item[0],
         ),
     )
     return [name for _index, name in grouped]
 
 
-def profile_group_label(profile_name: str) -> str:
-    return profile_target_group(profile_name)
+def _custom_profile_names(prefs: dict) -> set[str]:
+    custom_profiles = prefs.get("custom_profiles") or {}
+    if not isinstance(custom_profiles, dict):
+        return set()
+    return {
+        name
+        for name in custom_profiles
+        if name and name not in DEFAULT_PROFILES
+    }
 
 
 def get_profile_info(prefs: dict, profile_name: str) -> dict:

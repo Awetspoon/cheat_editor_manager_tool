@@ -439,6 +439,8 @@ def _configure_profile_controls(
         )
         for title in (app.profile_target_title, app.profile_export_title):
             title.configure(bg=panel_bg, fg=panel_text, font=FONT_PANEL_TITLE)
+        for label in (app.profile_group_label, app.profile_select_label):
+            label.configure(bg=panel_bg, fg=hint_fg, font=FONT_PANEL_TITLE)
         for hint in (app.profile_target_hint, app.profile_export_hint):
             hint.configure(bg=panel_bg, fg=hint_fg)
         app.profile_footer.configure(bg=footer_bg)

@@ -112,39 +112,88 @@ class StorageTests(unittest.TestCase):
             finally:
                 storage.PREFS_FILE = original
 
+    def test_load_prefs_normalizes_damaged_mapping_shapes(self):
+        with TemporaryDirectory() as tmp:
+            prefs_path = Path(tmp) / "prefs.json"
+            prefs_path.write_text(
+                (
+                    "{"
+                    '"mode": "broken",'
+                    '"button_colors": ["bad"],'
+                    '"custom_theme": "bad",'
+                    '"templates_default": "bad",'
+                    '"emulator_paths": {"PCSX2 (PS2) - PC": "  C:/PCSX2  ", "Blank": "   "},'
+                    '"custom_profiles": {"": {"subdir": "Nope"}, "Arcade": "bad", "MAME": {"subdir": "MAME"}}'
+                    "}"
+                ),
+                encoding="utf-8",
+            )
+            original = storage.PREFS_FILE
+            try:
+                storage.PREFS_FILE = prefs_path
+                prefs = storage.load_prefs()
+                self.assertEqual(prefs["mode"], "light")
+                self.assertIsInstance(prefs["button_colors"], dict)
+                self.assertIsInstance(prefs["custom_theme"], dict)
+                self.assertNotIn("templates_default", prefs)
+                self.assertEqual(
+                    prefs["emulator_paths"],
+                    {"PCSX2 (PS2) - PC": "C:/PCSX2"},
+                )
+                self.assertEqual(prefs["custom_profiles"], {"MAME": {"subdir": "MAME"}})
+            finally:
+                storage.PREFS_FILE = original
+
     def test_template_store_reads_and_lists_sanitized_names(self):
         with TemporaryDirectory() as tmp:
             original = template_store.TEMPLATES_DIR
             try:
                 template_store.TEMPLATES_DIR = Path(tmp) / "templates"
                 template_store.write_template(
-                    "Bad/Profile",
                     "Simple: One?",
                     "[Cheat]\n00000000 00000000\n",
                 )
 
                 self.assertEqual(
-                    template_store.read_template("Bad/Profile", "Simple: One?"),
+                    template_store.read_template("Simple: One?"),
                     "[Cheat]\n00000000 00000000\n",
                 )
                 self.assertEqual(
-                    template_store.list_templates("Bad/Profile"),
+                    template_store.list_templates(),
                     ["Blank", "Simple One"],
                 )
             finally:
                 template_store.TEMPLATES_DIR = original
 
-    def test_template_store_uses_fallback_for_invalid_names(self):
+    def test_template_store_uses_fallback_for_invalid_template_names(self):
         with TemporaryDirectory() as tmp:
             original = template_store.TEMPLATES_DIR
             try:
                 template_store.TEMPLATES_DIR = Path(tmp) / "templates"
-                template_store.write_template("???", "<<<", "content")
+                template_store.write_template("<<<", "content")
 
-                self.assertEqual(template_store.read_template("???", "<<<"), "content")
+                self.assertEqual(template_store.read_template("<<<"), "content")
                 self.assertTrue(
-                    (template_store.TEMPLATES_DIR / "Unknown Profile" / "Untitled.txt").exists()
+                    (template_store.TEMPLATES_DIR / "Untitled.txt").exists()
                 )
+            finally:
+                template_store.TEMPLATES_DIR = original
+
+    def test_template_store_deletes_saved_templates_but_not_blank(self):
+        with TemporaryDirectory() as tmp:
+            original = template_store.TEMPLATES_DIR
+            try:
+                template_store.TEMPLATES_DIR = Path(tmp) / "templates"
+                template_store.write_template("Saved Template", "content")
+
+                self.assertTrue(template_store.delete_template("Saved Template"))
+                self.assertEqual(
+                    template_store.read_template("Saved Template"),
+                    "",
+                )
+                self.assertFalse(template_store.delete_template("Blank"))
+                template_store.write_template("blank", "should not save")
+                self.assertEqual(template_store.list_templates(), ["Blank"])
             finally:
                 template_store.TEMPLATES_DIR = original
 

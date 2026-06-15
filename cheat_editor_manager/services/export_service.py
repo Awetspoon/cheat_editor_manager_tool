@@ -125,8 +125,8 @@ def build_export_plan_from_app(app, prof: str) -> dict:
     )
 
 def schedule_export_preview_update(app, *_):
-    self = app
     """Debounced export preview update (avoids heavy recompute on every keystroke)."""
+    self = app
     try:
         if getattr(self, "_preview_after", None):
             try:
@@ -147,8 +147,8 @@ def on_editor_modified(app, *_):
         pass
 
 def update_export_preview(app):
-    self = app
     """Update the Helper preview line to show the resolved export output path(s)."""
+    self = app
     prof = self.profile_var.get()
     if not prof:
         try:
@@ -188,13 +188,13 @@ def quick_export(app):
     plan = self.build_export_plan(prof)
 
     try:
-        plan["root"].mkdir(parents=True, exist_ok=True)
-    except Exception:
-        pass
-    try:
         plan["out_dir"].mkdir(parents=True, exist_ok=True)
-    except Exception:
-        pass
+    except Exception as exc:
+        messagebox.showerror(
+            "Quick Export",
+            f"Could not create export folder:\n{plan['out_dir']}\n\n{exc}",
+        )
+        return
 
     content = prepare_export_text(self.get_profile_info(prof), self.editor.get("1.0", tk.END))
     wrote = []

@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ..constants import DEFAULT_PROFILES, TEMPLATES_DIR
+from ..constants import TEMPLATES_DIR
+
+BLANK_TEMPLATE_NAME = "Blank"
 
 
 def _safe_name(name: str, *, fallback: str) -> str:
@@ -10,53 +12,46 @@ def _safe_name(name: str, *, fallback: str) -> str:
     return safe_name or fallback
 
 
-def profile_templates_dir(profile: str) -> Path:
-    d = TEMPLATES_DIR / _safe_name(profile, fallback="Unknown Profile")
+def _is_blank_template(name: str) -> bool:
+    return str(name or "").strip().casefold() == BLANK_TEMPLATE_NAME.casefold()
+
+
+def templates_dir() -> Path:
+    d = TEMPLATES_DIR
     d.mkdir(parents=True, exist_ok=True)
     return d
 
 
-def list_templates(profile: str) -> list[str]:
-    d = profile_templates_dir(profile)
-    names = [p.stem for p in sorted(d.glob("*.txt"))]
-    if "Blank" not in names:
-        names.insert(0, "Blank")
+def list_templates() -> list[str]:
+    d = templates_dir()
+    names = [
+        p.stem for p in sorted(d.glob("*.txt")) if not _is_blank_template(p.stem)
+    ]
+    names.insert(0, BLANK_TEMPLATE_NAME)
     return names
 
 
-def read_template(profile: str, name: str) -> str:
-    if name == "Blank":
+def read_template(name: str) -> str:
+    if _is_blank_template(name):
         return ""
-    p = (
-        profile_templates_dir(profile)
-        / f"{_safe_name(name, fallback='Untitled')}.txt"
-    )
+    p = templates_dir() / f"{_safe_name(name, fallback='Untitled')}.txt"
     if p.exists():
         return p.read_text(encoding="utf-8", errors="replace")
     return ""
 
 
-def write_template(profile: str, name: str, content: str) -> None:
-    if name == "Blank":
+def write_template(name: str, content: str) -> None:
+    if _is_blank_template(name):
         return
-    p = (
-        profile_templates_dir(profile)
-        / f"{_safe_name(name, fallback='Untitled')}.txt"
-    )
+    p = templates_dir() / f"{_safe_name(name, fallback='Untitled')}.txt"
     p.write_text(content, encoding="utf-8")
 
 
-def ensure_demo_templates() -> None:
-    demo = (
-        "# Cheat template (example)\n"
-        "# Add your cheat name in brackets, then codes below.\n\n"
-        "[Example Cheat]\n"
-        "00000000 00000000\n\n"
-        "# Notes:\n"
-        "# - Keep this file plain text.\n"
-        "# - Use Templates to reuse snippets.\n"
-    )
-    for prof in DEFAULT_PROFILES.keys():
-        folder = profile_templates_dir(prof)
-        if not any(folder.glob("*.txt")):
-            write_template(prof, "Simple (Code + Notes)", demo)
+def delete_template(name: str) -> bool:
+    if _is_blank_template(name):
+        return False
+    p = templates_dir() / f"{_safe_name(name, fallback='Untitled')}.txt"
+    if not p.exists():
+        return False
+    p.unlink()
+    return True

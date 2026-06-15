@@ -21,11 +21,7 @@ from .constants import (
     APP_NAME,
     APP_VERSION,
 )
-from .storage import (
-    ensure_demo_templates,
-    load_prefs,
-    save_prefs,
-)
+from .storage import load_prefs, save_prefs
 from .resources import asset_path
 from .resources import tk_file_path
 from .ui.context_menu import build_context_menu
@@ -79,20 +75,29 @@ from .ui.panels.profile_panel import refresh_profiles_dropdown as refresh_profil
 from .ui.panels.profile_panel import reset_export_root as reset_export_root_for_app
 from .ui.panels.workspace_panel import build_workspace
 
-class App(RetroarchCoreActionsMixin, ExportFileActionsMixin):
-    DEFAULT_WINDOW_WIDTH = 1280
-    DEFAULT_WINDOW_HEIGHT = 820
 
-    def __init__(self):
+def create_app_root() -> tk.Tk:
+    return TkinterDnD.Tk() if _HAS_DND else tk.Tk()
+
+
+class App(RetroarchCoreActionsMixin, ExportFileActionsMixin):
+    DEFAULT_WINDOW_WIDTH = 1180
+    DEFAULT_WINDOW_HEIGHT = 720
+    STARTUP_SCREEN_MARGIN_X = 80
+    STARTUP_SCREEN_MARGIN_Y = 80
+    STARTUP_MIN_USABLE_WIDTH = 900
+    STARTUP_MIN_USABLE_HEIGHT = 600
+
+    def __init__(self, *, root: tk.Tk | None = None):
         configure_tcl_environment()
-        ensure_demo_templates()
         self._startup_warnings: list[str] = []
         self.prefs = load_prefs()
         self._audit_retroarch_cores()
         self._set_windows_app_id()
-        self.root = (TkinterDnD.Tk() if _HAS_DND else tk.Tk())
+        self.root = root if root is not None else create_app_root()
         self.root.title(f"{APP_NAME} - {APP_VERSION}")
-        self._apply_startup_geometry()
+        if root is None:
+            self._apply_startup_geometry()
         self._brand_images = {}
         self._native_hicon = None
 
@@ -124,11 +129,29 @@ class App(RetroarchCoreActionsMixin, ExportFileActionsMixin):
     def _default_window_size(self) -> tuple[int, int]:
         return self.DEFAULT_WINDOW_WIDTH, self.DEFAULT_WINDOW_HEIGHT
 
+    @classmethod
+    def _fit_startup_size(
+        cls, width: int, height: int, screen_width: int, screen_height: int
+    ) -> tuple[int, int]:
+        if screen_width <= 0 or screen_height <= 0:
+            return width, height
+
+        max_width = min(
+            screen_width,
+            max(cls.STARTUP_MIN_USABLE_WIDTH, screen_width - cls.STARTUP_SCREEN_MARGIN_X),
+        )
+        max_height = min(
+            screen_height,
+            max(cls.STARTUP_MIN_USABLE_HEIGHT, screen_height - cls.STARTUP_SCREEN_MARGIN_Y),
+        )
+        return min(width, max_width), min(height, max_height)
+
     def _center_geometry(self, width: int, height: int) -> str:
         try:
             self.root.update_idletasks()
-            screen_w = max(width, self.root.winfo_screenwidth())
-            screen_h = max(height, self.root.winfo_screenheight())
+            screen_w = self.root.winfo_screenwidth()
+            screen_h = self.root.winfo_screenheight()
+            width, height = self._fit_startup_size(width, height, screen_w, screen_h)
         except Exception:
             return f"{width}x{height}"
         x = max(0, (screen_w - width) // 2)
@@ -136,8 +159,19 @@ class App(RetroarchCoreActionsMixin, ExportFileActionsMixin):
         return f"{width}x{height}+{x}+{y}"
 
     def _apply_startup_geometry(self) -> None:
+        self._set_normal_startup_window_state()
         default_w, default_h = self._default_window_size()
         self.root.geometry(self._center_geometry(default_w, default_h))
+
+    def _set_normal_startup_window_state(self) -> None:
+        try:
+            self.root.attributes("-fullscreen", False)
+        except Exception:
+            pass
+        try:
+            self.root.state("normal")
+        except Exception:
+            pass
 
     @staticmethod
     def _set_windows_app_id() -> None:

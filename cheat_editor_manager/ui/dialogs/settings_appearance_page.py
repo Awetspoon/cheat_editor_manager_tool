@@ -164,7 +164,12 @@ def build_appearance_page(
         wraplength=TEXT_WRAP,
     ).pack(anchor="w", padx=CONTENT_PAD, pady=(0, CONTENT_PAD))
 
-    colours = build_dialog_section(app_sf.inner, "Custom colours")
+    colours = build_dialog_section(app_sf.inner, "Custom colour editor")
+    ttk.Label(
+        colours,
+        text="Shown only when Mode is set to Custom.",
+        wraplength=TEXT_WRAP,
+    ).pack(anchor="w", padx=CONTENT_PAD, pady=(0, PANEL_GAP))
     color_vars, theme_entries = _build_colour_grid(
         colours,
         "Theme",
@@ -202,6 +207,7 @@ def build_appearance_page(
         helper_font_var=helper_font_var,
         color_vars=color_vars,
         button_color_vars=button_color_vars,
+        custom_section=colours,
         control_widgets=control_widgets,
     )
     _build_reset_row(colours, appearance_page)
@@ -376,12 +382,17 @@ def _wire_appearance_traces(
     helper_font_var: tk.StringVar,
     color_vars: dict[str, tk.StringVar],
     button_color_vars: dict[str, tk.StringVar],
+    custom_section,
     control_widgets: list,
 ) -> None:
     def on_mode_change(*_) -> None:
         if mode_var.get() == "custom":
             _replace_stale_dark_custom_values(app.prefs, color_vars)
-        _sync_custom_controls(mode_var, control_widgets)
+        _sync_custom_controls(
+            mode_var,
+            control_widgets,
+            custom_section=custom_section,
+        )
 
     try:
         mode_var.trace_add("write", on_mode_change)
@@ -395,7 +406,11 @@ def _wire_appearance_traces(
     except Exception:
         pass
 
-    _sync_custom_controls(mode_var, control_widgets)
+    _sync_custom_controls(
+        mode_var,
+        control_widgets,
+        custom_section=custom_section,
+    )
 
 
 def _replace_stale_dark_custom_values(
@@ -413,8 +428,26 @@ def _replace_stale_dark_custom_values(
         pass
 
 
-def _sync_custom_controls(mode_var: tk.StringVar, widgets: list) -> None:
+def _sync_custom_controls(
+    mode_var: tk.StringVar, widgets: list, *, custom_section=None
+) -> None:
     state = "normal" if mode_var.get() == "custom" else "disabled"
+    if custom_section is not None:
+        if mode_var.get() == "custom":
+            try:
+                custom_section.pack(
+                    fill="x",
+                    expand=False,
+                    padx=CONTENT_PAD,
+                    pady=(0, PANEL_GAP),
+                )
+            except Exception:
+                pass
+        else:
+            try:
+                custom_section.pack_forget()
+            except Exception:
+                pass
     for widget in widgets:
         try:
             widget.configure(state=state)

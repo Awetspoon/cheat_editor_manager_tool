@@ -2,7 +2,7 @@
 
 ![Cheat Editor Manager Tool (Full Screen)](assets/app-fullscreen.png)
 
-![Version](https://img.shields.io/badge/version-1.3.5-blue)
+![Version](https://img.shields.io/badge/version-1.3.6-blue)
 ![Platform](https://img.shields.io/badge/platform-Windows-lightgrey)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
@@ -16,6 +16,35 @@ Cheat Editor Manager Tool is a Windows desktop app for creating, editing, valida
 - Shows live export path preview before writing files
 - Supports emulator path overrides and profile-based export logic
 - Supports emulator custom profiles while preserving built-in profile safety
+
+## Purpose And Scope
+
+The app exists to help users keep cheat text, required IDs, and emulator/CFW export folders in one clear desktop workflow.
+
+In scope:
+
+- Local Windows desktop editing, loading, validation, and export
+- Built-in target profiles for common CFW and emulator layouts
+- Custom emulator-only profiles for extra export rules
+- Local preferences, templates, cheat source links, and export-root overrides
+- Packaged Windows EXE builds through PyInstaller
+
+Out of scope:
+
+- Downloading cheats automatically
+- Injecting cheats into games or consoles
+- Online accounts, cloud sync, or API-key features
+- Replacing emulator-specific cheat validation tools
+
+## Finished App Requirements
+
+- The app must start from both `python cheat_editor_manager_tool.py` and `python -m cheat_editor_manager`.
+- Loading a known cheat file should fill supported IDs where the file layout makes that possible.
+- Quick Export must write to the selected profile's expected folder and filename pattern.
+- Convert & Save must stay available for manual save locations and file extensions.
+- Settings must keep built-in CFW layouts safe while allowing custom emulator profiles and export-root overrides.
+- User preferences and templates must stay local on the device.
+- Tests must cover startup, storage, services, export logic, and key UI workflows.
 
 ## How The App Starts
 
@@ -74,28 +103,58 @@ See `assets/README.md` for the runtime-vs-brand-source asset inventory.
 - Wii (Homebrew)
 - Wii U (CFW)
 
-The target dropdown keeps one real list of profile names. It groups CFW/Homebrew targets before PC/emulator targets by order instead of adding fake divider rows, so export and helper logic still receive the exact profile names they expect.
+The target selector uses two dropdowns: one for the group, such as CFW / Homebrew, PC / Emulator, or Custom Emulators, and one for the actual target profile. User-added emulator profiles stay separate from the hardcoded CFW layouts. The selected profile is still one real value internally, so export and helper logic receive the exact profile name they expect.
 
 ## Quick Start
 
-1. Select the target profile, such as Atmosphere, Ryujinx, PCSX2, or RetroArch.
+1. Select the target group, then choose a profile such as Atmosphere, Ryujinx, PCSX2, or RetroArch.
 2. Click **Load File** to open an existing cheat file, or paste cheat text into the editor.
 3. When the loaded file comes from a known layout, the app reads IDs such as Switch TID/BID, Citra title IDs, Dolphin game IDs, or PCSX2 CRCs where possible.
 4. If an ID cannot be detected automatically, fill the required TID/BID or profile ID fields manually.
 5. Click **Quick Export** to write the cheat to the correct folder and filename layout.
 
+## User Flow
+
+1. Open the app.
+2. Choose the target profile.
+3. Load an existing cheat file or paste cheat text.
+4. Check the Helper panel for required IDs and export preview.
+5. Use Quick Export for the normal profile layout, or Convert & Save for manual control.
+6. Adjust settings, templates, source links, or export roots only when needed.
+
+## Screen Map
+
+- Main window: profile controls, Helper panel, editor, and action bar.
+- Settings: profiles, appearance, and export-root preferences.
+- Templates: reusable saved cheat snippets, with an editable add-template dialog.
+- Help Links: saved cheat source websites where users found codes or notes.
+- RetroArch Cores: core folder selection for RetroArch exports.
+- Extension picker: file type selection for Convert & Save.
+
+## Feature List
+
+- Load cheat files and paste cheat text
+- Auto-detect supported profile IDs from known file paths
+- Edit, undo, redo, clear, wrap, and save cheat text
+- Preview export paths before writing files
+- Quick Export to built-in and custom profile layouts
+- Convert & Save to a manual location and extension
+- Manage custom emulator profiles
+- Manage appearance, editable templates, source links, RetroArch cores, and export roots
+
 ## Main UI Sections
 
 - Header: app identity, mode toggle, Templates, Help Links, and Settings.
-- Profile controls: target profile selection, profile details, and export-root controls.
+- Profile controls: target group selection, target profile selection, profile details, and export-root controls.
 - Helper panel: profile-specific export rules, required ID fields, and live path preview.
-- Help Links: opens saved cheat-reference websites in your browser so you can find source material manually; it does not download or inject cheats automatically.
+- Help Links: opens saved cheat source websites in your browser; it does not download or inject cheats automatically.
 - Cheat editor: main text editor with formatting helpers, undo/redo, clear, wrap, scrollbars, and optional drag-and-drop.
 - Action bar: Load File, Quick Export, Convert & Save, and current status.
-- Dialogs: Settings, Templates, Help Links manager, RetroArch Cores, and Convert & Save extension selection.
+- Dialogs: Settings, Templates, Help Links source manager, RetroArch Cores, and Convert & Save extension selection.
 
 ## Documentation
 
+- This README is the main product and developer guide.
 - [assets/README.md](assets/README.md) explains runtime assets, retained brand-source files, and screenshot usage.
 
 ## Install For Local Development
@@ -140,7 +199,6 @@ You can also check that all Python files compile:
 python -m compileall -q assets/generate_brand_assets.py cheat_editor_manager tests hooks
 ```
 
-
 ## Build For Windows
 
 ```bash
@@ -167,13 +225,12 @@ cheat_editor_manager/
   services/
     export_service.py     Export orchestration and user-facing export messages
     file_load_service.py  Cheat file loading and ID auto-detection
-    help_link_service.py  Help-link cleanup, ordering, and reset rules
+    help_link_service.py  Cheat source link cleanup and duplicate detection
     retroarch_core_service.py  RetroArch core cleanup and selection rules
-    template_service.py   Template helper snippets and template-facing rules
     theme_service.py      Colour calculation and contrast helpers
   storage/
     prefs_store.py        Preferences loading/saving and stale-key cleanup
-    template_store.py     Template loading/saving and safe filename handling
+    template_store.py     Template loading, saving, deleting, and safe filenames
   ui/
     context_menu.py       Shared right-click editing menu
     style.py              Shared font and spacing tokens
@@ -186,7 +243,7 @@ cheat_editor_manager/
       settings_appearance_page.py  Theme and font settings page
       settings_export_roots_page.py  Built-in profile export-root overrides page
       settings_profiles_page.py  Custom profile management page
-tests/                    Smoke, storage, profile, theme, help-link, template, RetroArch, and export tests
+tests/                    Smoke, storage, profile, theme, help-link, RetroArch, and export tests
 assets/                   App icons, logos, screenshots, and generated brand files
 hooks/                    PyInstaller Tk/Tcl packaging hooks
 vendor/tcl/               Vendored Tcl/Tk runtime files for packaged builds
@@ -201,7 +258,7 @@ requirements.txt          Local build helper dependency list
 - Keep pure export rules in `export_logic.py` so they remain easy to test.
 - Keep loading/saving in `cheat_editor_manager/storage/`.
 - Keep user-facing orchestration in `cheat_editor_manager/services/`.
-- Keep `app_actions.py` thin; real export, file-load, template, help-link, and RetroArch core work should stay in services.
+- Keep `app_actions.py` thin; real export, file-load, help-link, and RetroArch core work should stay in services.
 - Split large dialogs by real sections, such as Settings pages, instead of rewriting the whole window at once.
 - Add new emulator targets through profiles first, then add tests for the expected export path.
 
